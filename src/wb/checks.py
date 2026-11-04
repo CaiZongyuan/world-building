@@ -109,3 +109,69 @@ def check_proposal(stage_dir: Path) -> list[Check]:
     checks.append(Check("外部素材：来源 / 许可 / 用途", FAIL if bad_ref else PASS,
                         "不完整：" + ", ".join(bad_ref) if bad_ref else "", [rel]))
     return checks
+
+
+# ---------------------------------------------------------------- plan
+PLAN_SECTIONS = ["问题", "方案", "任务", "验收门限（冻结）", "范围外"]
+
+
+@stage_check("plan")
+def check_plan(stage_dir: Path) -> list[Check]:
+    doc = stage_dir / "plan.md"
+    rel = f"{stage_dir.name}/plan.md"
+    if not doc.is_file():
+        return [Check("plan 存在", FAIL, "缺少 plan.md")]
+    text = doc.read_text(encoding="utf-8")
+    secs = markdown_sections(text)
+    checks = [Check("plan 存在", PASS, evidence=[rel])]
+    for name in PLAN_SECTIONS:
+        ok = name in secs and secs[name].strip()
+        checks.append(Check(f"必填节：{name}", PASS if ok else FAIL, "" if ok else "缺少或为空", [rel]))
+    tasks = re.findall(r"^- \[[ x]\] ", text, re.M)
+    checks.append(Check("任务为可勾选清单", PASS if tasks else FAIL, f"{len(tasks)} 条", [rel]))
+    frozen = re.search(r"冻结于 \d{4}-\d{2}-\d{2}", secs.get("验收门限（冻结）", ""))
+    checks.append(Check("门限带冻结日期", PASS if frozen else FAIL, "" if frozen else "缺少“冻结于 YYYY-MM-DD”", [rel]))
+    rows = re.findall(r"^\| [SMRVN]\d+ \|", secs.get("验收门限（冻结）", ""), re.M)
+    checks.append(Check("门限有编号行", PASS if rows else FAIL, f"{len(rows)} 行", [rel]))
+    estimate = re.search(r"(预计|预估|上限)\s*\d+(\.\d+)?\s*(h|小时|天)", text)
+    checks.append(Check("不含时间预估", FAIL if estimate else PASS, estimate.group(0) if estimate else "", [rel]))
+    return checks
+
+
+# ---------------------------------------------------------------- 参考图
+DIM_CATEGORIES = {"标准锚点", "设计假设", "实测"}
+
+
+@stage_check("reference")
+def check_reference(stage_dir: Path) -> list[Check]:
+    import json
+
+    checks: list[Check] = []
+    idx = stage_dir / "reference.json"
+    if not idx.is_file():
+        checks.append(Check("参考图清单", FAIL, "缺少 reference.json"))
+    else:
+        items = json.loads(idx.read_text(encoding="utf-8")).get("images", [])
+        bad = [i.get("file", "?") for i in items
+               if not str(i.get("file", "")).lower().endswith(".webp") or not (stage_dir / i.get("file", "")).is_file()]
+        unseen = [i.get("file", "?") for i in items if not i.get("viewed") or not i.get("actual_size")]
+        checks.append(Check("参考图存在且为 WebP (R1)", FAIL if bad or not items else PASS,
+                            "问题：" + ", ".join(bad) if bad else f"{len(items)} 张", [idx.name]))
+        checks.append(Check("参考图已查看并记录实际尺寸 (R1)", FAIL if unseen else PASS,
+                            "未查看：" + ", ".join(unseen) if unseen else "", [idx.name]))
+
+    dims = stage_dir / "dimensions.md"
+    if not dims.is_file():
+        checks.append(Check("尺寸表来源类别 (R2)", FAIL, "缺少 dimensions.md"))
+    else:
+        rows = [r for r in dims.read_text(encoding="utf-8").splitlines()
+                if r.startswith("|") and not re.match(r"^\|\s*(项|-)", r)]
+        cells = [[c.strip() for c in r.strip("|").split("|")] for r in rows]
+        bad = [c[0] for c in cells if len(c) < 3 or c[2] not in DIM_CATEGORIES]
+        checks.append(Check("尺寸表来源类别 (R2)", FAIL if bad or not cells else PASS,
+                            "未分类：" + ", ".join(bad) if bad else f"{len(cells)} 项", [dims.name]))
+
+    lp = stage_dir / "load_path.svg"
+    checks.append(Check("载荷链草图 (R3)", PASS if lp.is_file() else FAIL, "" if lp.is_file() else "缺少 load_path.svg",
+                        [lp.name] if lp.is_file() else []))
+    return checks

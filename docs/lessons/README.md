@@ -9,8 +9,8 @@
 | `00-prior-lumen-1104.md` | 先验（1104 项目经验，导入） | 只读 |
 | `01-requirements-grilling.md` | 需求访谈 | 初稿（薄切片 01） |
 | `02-proposal-preview.md` | 方案预览 | 初稿（薄切片 01） |
-| `03-plan.md` | plan | 待写 |
-| `04-reference-images.md` | 参考图 | 待写 |
+| `03-plan.md` | plan | 初稿（薄切片 01） |
+| `04-reference-images.md` | 参考图 | 初稿（薄切片 01） |
 | `05-modelling.md` | 建模 | 待写 |
 | `06-simulation.md` | 仿真 | 待写 |
 | `07-pose-binding-render.md` | 位姿绑定与渲染 | 待写 |

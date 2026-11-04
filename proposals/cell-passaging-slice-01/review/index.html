@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>审批点② 参考图与 plan</title><link rel="stylesheet" href="assets/theme.css">
+<script>try{const q=new URLSearchParams(location.search).get('theme');const t=q||localStorage.getItem('wb-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<style>.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}</style>
+</head><body>
+<button class="theme-btn" id="theme-btn" type="button">外观</button>
+<main>
+<header>
+<div class="eyebrow">World Building · 审批点② · cell-passaging-slice-01</div>
+<h1>参考图与 plan</h1>
+<p class="lede">细胞传代薄切片 01：开培养箱取板送观察站。这一页通过之后，建模、仿真、渲染都由 agent 自主推进。</p>
+<nav class="toc"><a href="#board"><span class="n">01</span>参考板</a><a href="#dims"><span class="n">02</span>尺寸表</a><a href="#load"><span class="n">03</span>载荷链</a><a href="#plan"><span class="n">04</span>plan 任务</a><a href="#gates"><span class="n">05</span>冻结门限</a></nav>
+</header>
+<section id="board"><h2><span class="n">01</span>参考板</h2><p class="sub">参考图只用来冻结外观风格，尺寸一律以第 02 节为准。</p><div class="board"><figure><img src="board/inc_both_open.webp" alt=""><figcaption>两道门都已打开，4 层穿孔隔板，加湿水盘可作为外观细节。图中板的层位与设计不同（设计放第 3 层）。 <span class="mute">· gpt-image-2.5-flare · 实得 1312×1199</span></figcaption></figure>
+<figure><img src="board/inc_closed.webp" alt=""><figcaption>外门闭合，铰链在左，把手在右，与设计一致。外形比例偏矮胖，尺寸以 dimensions.md 为准。 <span class="mute">· gpt-image-2.5-flare · 实得 1312×1199</span></figcaption></figure>
+<figure><img src="board/inc_outer_open.webp" alt=""><figcaption>外门向左打开，内玻璃门闭合（铰链在右）。图中有 5 层隔板，与设计的 4 层不符，以尺寸表为准。 <span class="mute">· gpt-image-2.5-flare · 实得 1254×1254</span></figcaption></figure>
+<figure><img src="board/inc_shelf_detail.webp" alt=""><figcaption>隔板搭在 L 形导轨上，立柱为槽孔式，可用来参考载荷链细节。 <span class="mute">· gpt-image-2.5-flare · 实得 1536×1024</span></figcaption></figure>
+<figure><img src="board/offset_fingers.webp" alt=""><figcaption>偏置宽指夹住板的两个短端，带橡胶指垫，与 dimensions.md 中的结构一致。 <span class="mute">· gpt-image-2.5-flare · 实得 1536×1024</span></figcaption></figure></div></section>
+<section id="dims"><h2><span class="n">02</span>尺寸表</h2><p class="sub">来源类别分三种：标准锚点、设计假设、实测。</p><p class="small">单位为 m，Z 轴朝上。培养箱原点位于箱体中心正下方的地面，正面朝 −Y。</p>
+<p class="small">参考图只决定外观风格，<b>所有尺寸以本表为准</b>。来源分三类：</p>
+<ul><li><b>标准锚点</b>：外部标准或规格书</li><li><b>设计假设</b>：本项目自定</li><li><b>实测</b>：从复用资产或计算中测得</li></ul>
+<h3>培养箱</h3>
+<div class="table-wrap"><table><tr><th>项</th><th>值</th><th>来源类别</th><th>依据</th></tr><tr><td>外形 宽 × 深 × 高</td><td>0.70 × 0.70 × 0.95</td><td>设计假设</td><td>与 P1-B 同一量级，便于对照；真实 Heracell VIOS 160i 约 0.637 × 0.880 × 0.900</td></tr><tr><td>调平脚高</td><td>0.03</td><td>设计假设</td><td>外观</td></tr><tr><td>内腔 宽（x）</td><td>−0.25 … +0.25</td><td>实测</td><td>P1-B 碰撞几何：内壁 x = ±0.25</td></tr><tr><td>内腔 进深（y）</td><td>−0.29（前框）… +0.246（后壁内面）</td><td>实测</td><td>P1-B：front_jamb y = −0.29，back wall y = 0.298 − 0.052</td></tr><tr><td>内腔 高（z）</td><td>0.18 … 0.84</td><td>实测</td><td>P1-B：底保温层顶 z = 0.18，顶保温层底 z = 0.84</td></tr><tr><td>外门 铰链轴</td><td>x = −0.335，y = −0.37</td><td>实测</td><td>P1-B outer_door 原点</td></tr><tr><td>外门 转角</td><td>0 … 115°</td><td>实测</td><td>P1-B / P3</td></tr><tr><td>外门 厚度</td><td>0.06</td><td>设计假设</td><td>保温门</td></tr><tr><td>内玻璃门 铰链轴</td><td>x = +0.284，y = −0.321</td><td>实测</td><td>P1-B inner_door 原点</td></tr><tr><td>内玻璃门 转角</td><td>0 … 105°</td><td>实测</td><td>P1-B</td></tr><tr><td>隔板 顶面高度 z</td><td>0.315 / 0.435 / 0.555 / 0.675</td><td>设计假设</td><td>层间距 0.12；第 3 层 0.555 落在可达范围中段（<code>02-proposal/analysis</code> IK 初筛：TCP 0.103 时第 3、4 层可达）</td></tr><tr><td>隔板 尺寸 宽 × 深 × 厚</td><td>0.47 × 0.44 × 0.0015（碰撞厚 0.003）</td><td>设计假设</td><td>前沿 y = −0.225，后沿 y = +0.215，需完整承托板心 y = −0.18 的板</td></tr><tr><td>隔板 支撑导轨</td><td>两侧 L 形，宽 0.026，长 0.416</td><td>实测</td><td>P1-B support_rail</td></tr><tr><td>立柱</td><td>4 根，x = ±0.245，y = −0.205 / +0.19</td><td>实测</td><td>P1-B rack_post</td></tr><tr><td>板起始位置（第 3 层）</td><td>板心 (0, −0.18, 0.555 + 板底)</td><td>设计假设</td><td>IK 可达；板前沿 y = −0.223，仍在隔板上</td></tr></table></div>
+<h3>六孔板（复用 <code>sixwell</code>）</h3>
+<div class="table-wrap"><table><tr><th>项</th><th>值</th><th>来源类别</th><th>依据</th></tr><tr><td>外形 长 × 宽</td><td>0.1278 × 0.0855</td><td>标准锚点</td><td>ANSI SLAS 1-2004：127.76 × 85.5 mm，公差 ±0.5</td></tr><tr><td>板面高 / 定位唇最高</td><td>0.0203 / 0.0210</td><td>实测</td><td>sixwell README</td></tr><tr><td>摆放方向</td><td>长边沿 X</td><td>设计假设</td><td>夹爪沿 X 方向张合，夹住两个短端</td></tr></table></div>
+<h3>偏置宽指（新建）</h3>
+<div class="table-wrap"><table><tr><th>项</th><th>值</th><th>来源类别</th><th>依据</th></tr><tr><td>原装手指行程</td><td>0 … 0.080（每指 0 … 0.040）</td><td>标准锚点</td><td>Franka Hand 规格；Menagerie 手指关节范围</td></tr><tr><td>每指外偏置</td><td>0.055</td><td>设计假设</td><td>开口范围 = 0.110 … 0.190，覆盖板长 0.128 及余量</td></tr><tr><td>夹持开口（闭合到板）</td><td>约 0.128</td><td>实测</td><td>板长</td></tr><tr><td>指尖前伸（沿手爪 z）</td><td>0.030</td><td>设计假设</td><td>TCP 偏置约 0.133，处在 IK 初筛的 0.103 … 0.16 之间</td></tr><tr><td>指垫</td><td>0.020（宽）× 0.025（高），橡胶 μ ≈ 0.8</td><td>设计假设</td><td>聚苯乙烯 / 橡胶摩擦</td></tr><tr><td>夹持力</td><td>70 N 持续</td><td>标准锚点</td><td>Franka Hand 规格；板 + 盖约 0.1 kg，余量很大</td></tr></table></div>
+<h3>观察站抽屉（复用 <code>plate_imager_p0</code>）</h3>
+<div class="table-wrap"><table><tr><th>项</th><th>值</th><th>来源类别</th><th>依据</th></tr><tr><td>抽屉行程</td><td>0 … 0.190</td><td>实测</td><td>imager README</td></tr><tr><td>托面高度（台面坐标）</td><td>0.070</td><td>实测</td><td>imager README：稳态板底 z = 0.070</td></tr><tr><td>台面高度</td><td>0.60</td><td>实测</td><td>P3 布局</td></tr></table></div></section>
+<section id="load"><h2><span class="n">03</span>载荷链</h2><div class="card"><img src="load_path.svg" alt="载荷链" style="width:100%;border:0;background:none"></div></section>
+<section id="plan"><h2><span class="n">04</span>plan 任务</h2><p class="sub">按阶段推进：参考图 → 建模 → 仿真 → 位姿绑定与渲染。</p><h3>参考图（04-reference）</h3>
+<ul><li>☑ 生成培养箱参考板，包含四张：外观三视角、外门打开、内玻璃门打开、隔板细节。提示词、模型、实际像素尺寸全部记录下来。</li><li>☑ 生成偏置宽指的概念图：装在 Panda 手指上，夹住六孔板的两个短端。</li><li>☑ 尺寸表 <code>dimensions.md</code>：每个尺寸标注来源，分为「标准锚点 / 设计假设 / 实测」三类。其中隔板高度要按可达性设计，第 3 层定在 z≈0.555。</li><li>☑ 载荷链草图：板 → 隔板 → 托架 → 立柱 → 箱体 → 地面；门 → 铰链 → 箱体。</li><li>☑ 验证门 <code>reference</code> 判 PASS。</li><li>☐ <b>审批点②</b>：等待用户确认。</li></ul>
+<h3>建模（05-modelling）</h3>
+<ul><li>☐ 用 Blender 5.4 headless 编写脚本，从零建出培养箱：箱体、外门、内玻璃门、4 层隔板、铰链。每个部件显式标注 visual / collision / physics-root，并输出映射表。</li><li>☐ 偏置宽指：建视觉模型和碰撞代理，挂到 Panda 的两根手指上。</li><li>☐ 台面和地面用简单几何建模。</li><li>☐ 导出：视觉 GLB；MJCF，其中门由执行器驱动、隔板固定。</li><li>☐ 把导出文件重新读回来检查：GLB 中不能出现碰撞代理；MJCF 必须能编译；关节范围要和尺寸表一致。</li><li>☐ 出一张白模加材质的预览渲染，作为验证门的证据，不需要审批。</li><li>☐ 与 Lumen P1-B 对比：部件数、碰撞代理数、各类问题，记入阶段复盘。</li><li>☐ 验证门 <code>modelling</code> 判 PASS。</li></ul>
+<h3>仿真（06-simulation）</h3>
+<ul><li>☐ 装配场景：新培养箱、观察站、六孔板与盖、带偏置宽指的 Panda、底座、台面，布局沿用 P3。</li><li>☐ 先跑负例：<code>no_support</code>、过插、去掉盖子的支撑，这三个必须全部按预期判 FAIL。</li><li>☐ 编写 Panda 轨迹：在门外预备位、取板位、退出位、放板位、停靠位做 IK，生成平滑的关节轨迹，由位置执行器跟踪。</li><li>☐ 跑全流程（工艺步骤 0–7），逐步记录刚体位姿和接触数据。</li><li>☐ 按下方冻结的门限判定。FAIL 就保留记录，复盘后改做法重跑，但不放宽门限。</li><li>☐ 验证门 <code>simulation</code> 判 PASS。</li></ul>
+<h3>位姿绑定与渲染（07-render）</h3>
+<ul><li>☐ 按白名单导入视觉资产，排除碰撞代理；把 MuJoCo 记录的刚体世界位姿逐帧写入 Blender（30 fps，按仿真时间采样，不插值伪造运动）。</li><li>☐ 吞吐测试：Cycles OptiX，1080p、128 采样加降噪，取若干帧测实际每帧耗时。</li><li>☐ 渲染全片：帧数 = 仿真时长 × 30，不加速，不剪辑。编码成 mp4。</li><li>☐ 验证门 <code>render</code> 判 PASS。</li></ul>
+<h3>收尾</h3>
+<ul><li>☐ 每个阶段的阶段日志和经验记录（03–07）。</li><li>☐ 汇总复盘，提炼新 skill（#9）。</li></ul></section>
+<section id="gates"><h2><span class="n">05</span>冻结门限</h2><p class="small">冻结于 2026-11-04，之后不得放宽。门限名称中的 runner 停止条件与最终验收条件分开命名。</p>
+<h3>仿真</h3>
+<div class="table-wrap"><table><tr><th>ID</th><th>门限</th><th>值</th><th>来源</th></tr><tr><td>S1</td><td>预静置稳定窗口：预静置最后 1 s 内，所有自由体线速度</td><td>&lt; 1 mm/s</td><td>参照 P3 v3 的预静置</td></tr><tr><td>S2</td><td>被动自由体漂移：未被搬运的自由体相对预静置末态的最大平移</td><td>≤ 0.1 mm</td><td>P3 严格门限</td></tr><tr><td>S3</td><td>任意接触对的最大穿透</td><td>≤ 0.25 mm</td><td>P3 被动组件门限</td></tr><tr><td>S4</td><td>禁止接触对：Panda 连杆或偏置宽指与培养箱箱体、隔板、门、观察站外壳、台面之间的接触次数</td><td>0</td><td>新增，对应 R3</td></tr><tr><td>S5</td><td>搬运中盖相对板的位移：xy</td><td>≤ 2 mm</td><td>新增，对应 R3</td></tr><tr><td>S6</td><td>搬运中盖相对板的位移：z（盖保持落座）</td><td>≤ 1 mm</td><td>新增，对应 R3</td></tr><tr><td>S7</td><td>松爪前的支撑：抽屉托面对板的法向力合计 ≥ 0.8 ×（板 + 盖）重量，并持续</td><td>≥ 0.1 s</td><td>参照 transfer_negative_audit_v10</td></tr><tr><td>S8</td><td>终态板位置：板心与抽屉托槽目标点的距离</td><td>≤ 3 mm</td><td>P3</td></tr><tr><td>S9</td><td>终态门：外门、内门关节角</td><td>&lt; 0.1°</td><td>P3</td></tr><tr><td>S10</td><td>终态抽屉：位移</td><td>&lt; 3 mm</td><td>P3</td></tr><tr><td>S11</td><td>不伪造支撑：任务物体的 equality 约束数、mocap 数</td><td>0、0</td><td>P3</td></tr><tr><td>S12</td><td>数值健康：MuJoCo warning 数；状态中的 NaN 或 Inf</td><td>0、无</td><td>P3</td></tr><tr><td>S13</td><td>Panda 关节位置在限位内，执行器力在 forcerange 内</td><td>全程满足</td><td>Menagerie 模型</td></tr></table></div>
+<h3>仿真负例（必须判 FAIL）</h3>
+<div class="table-wrap"><table><tr><th>ID</th><th>负例</th><th>期望</th></tr><tr><td>N1</td><td>去掉抽屉托面碰撞（<code>no_support</code>）后放板</td><td>板下落超过 5 mm；S7 判 FAIL</td></tr><tr><td>N2</td><td>把板初始放到隔板下方 2 mm（过插）</td><td>S3 判 FAIL</td></tr><tr><td>N3</td><td>搬运中把盖的摩擦系数设为 0</td><td>S5 或 S6 判 FAIL</td></tr></table></div>
+<h3>建模</h3>
+<div class="table-wrap"><table><tr><th>ID</th><th>门限</th></tr><tr><td>M1</td><td>培养箱 MJCF 能用 MuJoCo 3.17 编译；外门范围 0–115°，内门范围 0–105°</td></tr><tr><td>M2</td><td>隔板顶面高度与尺寸表一致（误差 ≤ 1 mm）；第 3 层 z = 0.555 ± 0.005</td></tr><tr><td>M3</td><td>导出的 GLB 重新读回后，没有名称或角色为 collision 的对象</td></tr><tr><td>M4</td><td>映射表覆盖全部部件，每个部件都有 visual、collision、physics-root 三列</td></tr><tr><td>M5</td><td>静置测试：门关闭、隔板空载 1 s，没有穿透超过 0.25 mm 的接触</td></tr><tr><td>M6</td><td>偏置宽指的开口范围覆盖 110–190 mm</td></tr></table></div>
+<h3>参考图</h3>
+<div class="table-wrap"><table><tr><th>ID</th><th>门限</th></tr><tr><td>R1</td><td>参考板图片存在、为 WebP，并且已被查看过（尺寸记录在案）</td></tr><tr><td>R2</td><td>尺寸表每项都标注了来源类别（标准锚点 / 设计假设 / 实测）</td></tr><tr><td>R3</td><td>载荷链草图存在</td></tr></table></div>
+<h3>渲染</h3>
+<div class="table-wrap"><table><tr><th>ID</th><th>门限</th></tr><tr><td>V1</td><td>场景中没有碰撞代理对象</td></tr><tr><td>V2</td><td>帧数 = round(仿真时长 × 30)；没有加速或跳帧</td></tr><tr><td>V3</td><td>抽检帧中各刚体的 Blender 世界位姿与仿真记录一致（误差 ≤ 1e-5 m）</td></tr><tr><td>V4</td><td>成片 mp4 能正常解码，时长与仿真时长之差 ≤ 1 帧</td></tr></table></div></section>
+<footer>由 <code>wb review</code> 从项目文件生成：reference.json、dimensions.md、load_path.svg、03-plan/plan.md</footer>
+<script>document.getElementById('theme-btn').onclick=()=>{const r=document.documentElement,d=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;r.dataset.theme=d?'light':'dark';try{localStorage.setItem('wb-theme',r.dataset.theme)}catch(e){}};</script>
+</main></body></html>

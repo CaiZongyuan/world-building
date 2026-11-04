@@ -78,3 +78,29 @@ def test_publish_copies_proposal(project, tmp_path):
     dst = publish_proposal(p, tmp_path / "repo")
     assert (dst / "index.html").is_file() and (dst / "img" / "a.webp").is_file()
     assert not (dst / "preview_full.png").exists()
+
+
+def test_plan_pass(project):
+    assert run_gate(project("plan-pass"), "plan").status == "PASS"
+
+
+@pytest.mark.parametrize("name,failed_check", [
+    ("plan-with-estimate", "不含时间预估"),
+    ("plan-unfrozen", "门限带冻结日期"),
+])
+def test_plan_negative_fails(project, name, failed_check):
+    r = run_gate(project(name), "plan")
+    assert r.status == "FAIL" and failed_check in {c.name for c in r.checks if c.status == "FAIL"}
+
+
+def test_reference_pass(project):
+    assert run_gate(project("ref-pass"), "reference").status == "PASS"
+
+
+@pytest.mark.parametrize("name,failed_check", [
+    ("ref-uncategorized", "尺寸表来源类别 (R2)"),
+    ("ref-unviewed", "参考图已查看并记录实际尺寸 (R1)"),
+])
+def test_reference_negative_fails(project, name, failed_check):
+    r = run_gate(project(name), "reference")
+    assert r.status == "FAIL" and failed_check in {c.name for c in r.checks if c.status == "FAIL"}
