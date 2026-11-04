@@ -11,6 +11,6 @@
 | `02-proposal-preview.md` | 方案预览 | 初稿（薄切片 01） |
 | `03-plan.md` | plan | 初稿（薄切片 01） |
 | `04-reference-images.md` | 参考图 | 初稿（薄切片 01） |
-| `05-modelling.md` | 建模 | 待写 |
+| `05-modelling.md` | 建模 | 初稿（薄切片 01） |
 | `06-simulation.md` | 仿真 | 待写 |
 | `07-pose-binding-render.md` | 位姿绑定与渲染 | 待写 |

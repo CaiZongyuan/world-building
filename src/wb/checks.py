@@ -175,3 +175,97 @@ def check_reference(stage_dir: Path) -> list[Check]:
     checks.append(Check("载荷链草图 (R3)", PASS if lp.is_file() else FAIL, "" if lp.is_file() else "缺少 load_path.svg",
                         [lp.name] if lp.is_file() else []))
     return checks
+
+
+# ---------------------------------------------------------------- 建模
+def _glb_node_names(path: Path) -> list[str]:
+    """不依赖 Blender，直接解析 GLB 的 JSON 块读节点名：验证导出字节本身。"""
+    import json
+    import struct
+
+    b = path.read_bytes()
+    n = struct.unpack_from("<I", b, 12)[0]
+    gltf = json.loads(b[20:20 + n])
+    return [x.get("name", "") for x in gltf.get("nodes", [])] + [x.get("name", "") for x in gltf.get("meshes", [])]
+
+
+def _thresholds(stage_dir: Path) -> dict:
+    import json
+
+    f = stage_dir.parent / "03-plan" / "thresholds.json"
+    return json.loads(f.read_text(encoding="utf-8")) if f.is_file() else {}
+
+
+@stage_check("modelling")
+def check_modelling(stage_dir: Path) -> list[Check]:
+    import json
+    import math
+
+    th = _thresholds(stage_dir).get("modelling")
+    if not th:
+        return [Check("冻结门限", BLOCKED, "缺少 03-plan/thresholds.json 的 modelling 段")]
+    proj = stage_dir.parent
+    checks: list[Check] = []
+    try:
+        import mujoco
+    except ImportError:
+        return [Check("MuJoCo 可用", BLOCKED, "需 `uv run --extra sim`")]
+
+    xml = proj / th["mjcf"]
+    try:
+        m = mujoco.MjModel.from_xml_path(str(xml))
+    except Exception as e:  # noqa: BLE001
+        return [Check("M1 MJCF 可编译", FAIL, str(e)[:200], [th["mjcf"]])]
+    bad = []
+    for j, (lo, hi) in th["M1_joint_range_deg"].items():
+        r = [math.degrees(v) for v in m.jnt_range[m.joint(j).id]]
+        if abs(r[0] - lo) > 0.01 or abs(r[1] - hi) > 0.01:
+            bad.append(f"{j} {r[0]:.2f}…{r[1]:.2f}")
+    checks.append(Check("M1 MJCF 可编译且门范围正确", FAIL if bad else PASS, "; ".join(bad), [th["mjcf"]]))
+
+    d = mujoco.MjData(m)
+    mujoco.mj_forward(m, d)
+    bad = []
+    for g, z in th["M2_shelf_tops"].items():
+        gid = m.geom(g).id
+        top = d.geom_xpos[gid][2] + m.geom_size[gid][2]
+        if abs(top - z) > th["M2_tol"]:
+            bad.append(f"{g} 顶面 {top:.4f} ≠ {z}")
+    checks.append(Check("M2 隔板高度", FAIL if bad else PASS, "; ".join(bad), [th["mjcf"]]))
+
+    names = _glb_node_names(proj / th["glb"])
+    col = [n for n in names if n.startswith("COL_") or "collision" in n.lower()]
+    checks.append(Check("M3 GLB 无碰撞代理", FAIL if col or not names else PASS,
+                        f"{len(names)} 个节点/网格" + (f"；含 {col[:5]}" if col else ""), [th["glb"]]))
+
+    design = json.loads((stage_dir / "design.json").read_text(encoding="utf-8"))
+    mapping = json.loads((stage_dir / "mapping.json").read_text(encoding="utf-8"))
+    idx = {(r["body"], r["part"]): r for r in mapping}
+    bad = []
+    for bname, b in design["bodies"].items():
+        for p in b["parts"]:
+            r = idx.get((bname, p["name"]))
+            if not r or not r.get("visual") or not r.get("physics_root") or bool(r.get("collision")) != p["collision"]:
+                bad.append(f"{bname}/{p['name']}")
+    checks.append(Check("M4 映射表完整一致", FAIL if bad else PASS, "问题：" + ", ".join(bad[:8]) if bad else
+                        f"{len(mapping)} 行", ["05-modelling/mapping.json"]))
+
+    mujoco.mj_resetData(m, d)
+    maxpen, maxdoor = 0.0, 0.0
+    for _ in range(int(1.0 / m.opt.timestep)):
+        mujoco.mj_step(m, d)
+        for c in d.contact[: d.ncon]:
+            maxpen = max(maxpen, -c.dist)
+        maxdoor = max(maxdoor, *(abs(math.degrees(d.qpos[m.joint(j).qposadr[0]])) for j in th["M1_joint_range_deg"]))
+    ok = maxpen <= th["M5_max_penetration"] and maxdoor <= th["M5_door_hold_deg"]
+    checks.append(Check("M5 静置 1 s", PASS if ok else FAIL, f"最大穿透 {maxpen*1000:.3f} mm，门最大偏转 {maxdoor:.4f}°",
+                        [th["mjcf"]]))
+
+    lo, hi = design["offset_finger"]["opening_range"]
+    need = th["M6_opening_range"]
+    ok = lo <= need[0] + 1e-9 and hi >= need[1] - 1e-9
+    checks.append(Check("M6 偏置宽指开口范围", PASS if ok else FAIL, f"{lo:.3f}…{hi:.3f} m", ["05-modelling/design.json"]))
+
+    prev = sorted((stage_dir / "preview").glob("*.webp"))
+    checks.append(Check("预览渲染（证据）", PASS if prev else FAIL, f"{len(prev)} 张", [f"05-modelling/preview/{p.name}" for p in prev]))
+    return checks
