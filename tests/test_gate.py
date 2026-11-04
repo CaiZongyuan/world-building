@@ -63,6 +63,7 @@ def test_proposal_pass(project):
     ("proposal-ref-no-license", "外部素材：来源 / 许可 / 用途"),
     ("proposal-hotlink", "图片本地化（无外链）"),
     ("proposal-device-no-level", "设备：状态 / 难度等级 / 许可"),
+    ("proposal-png", "图片格式为 WebP"),
 ])
 def test_proposal_negative_fails(project, name, failed_check):
     r = run_gate(project(name), "proposal")
@@ -75,5 +76,5 @@ def test_publish_copies_proposal(project, tmp_path):
     p = project("proposal-pass")
     (p / "02-proposal" / "preview_full.png").write_bytes(b"x")
     dst = publish_proposal(p, tmp_path / "repo")
-    assert (dst / "index.html").is_file() and (dst / "img" / "a.png").is_file()
+    assert (dst / "index.html").is_file() and (dst / "img" / "a.webp").is_file()
     assert not (dst / "preview_full.png").exists()

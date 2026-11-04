@@ -74,6 +74,8 @@ def check_proposal(stage_dir: Path) -> list[Check]:
     remote = [s for s in srcs if re.match(r"^(https?:)?//", s)]
     absent = [s for s in srcs if s not in remote and not s.startswith("data:") and not (stage_dir / s).is_file()]
     checks.append(Check("图片本地化（无外链）", FAIL if remote else PASS, "外链：" + ", ".join(remote) if remote else "", [rel]))
+    not_webp = [x for x in srcs if not x.startswith("data:") and not x.lower().endswith((".webp", ".svg"))]
+    checks.append(Check("图片格式为 WebP", FAIL if not_webp else PASS, "非 WebP：" + ", ".join(not_webp) if not_webp else "", [rel]))
     checks.append(Check("图片文件存在", FAIL if absent else PASS, "缺：" + ", ".join(absent) if absent else "", [rel]))
 
     try:
@@ -87,8 +89,9 @@ def check_proposal(stage_dir: Path) -> list[Check]:
         return checks
 
     thumbs = [d["thumb"] for d in data.get("devices", []) if d.get("thumb")]
-    bad_thumbs = [t for t in thumbs if re.match(r"^(https?:)?//", t) or not (stage_dir / t).is_file()]
-    checks.append(Check("设备缩略图本地存在", FAIL if bad_thumbs else PASS,
+    bad_thumbs = [t for t in thumbs if re.match(r"^(https?:)?//", t) or not (stage_dir / t).is_file()
+                  or not t.lower().endswith((".webp", ".svg"))]
+    checks.append(Check("设备缩略图本地存在且为 WebP", FAIL if bad_thumbs else PASS,
                         "问题：" + ", ".join(bad_thumbs) if bad_thumbs else "", [rel]))
 
     bad_dev = [d.get("name", "?") for d in data.get("devices", [])

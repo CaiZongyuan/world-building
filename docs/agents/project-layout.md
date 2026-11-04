@@ -35,6 +35,8 @@ uv run wb gate <项目目录> <阶段>   # 阶段：requirements proposal plan r
 
 `uv run wb publish <项目目录>`：把 `02-proposal/` 复制到仓库的 `proposals/<项目名>/`（ADR-0002 修订）。方案预览每改一次都要重新发布一次，再提交。
 
+方案预览的样式：把仓库里的 `templates/proposal/assets/` 复制到 `02-proposal/assets/`，页面用 `<link rel="stylesheet" href="assets/theme.css">` 引用。主题沿用 spatial-sync 站点，支持浅色和深色两套，URL 加 `?theme=light|dark` 可强制切换。图片一律用 WebP（验证门会检查）。
+
 ## 同步
 
 ```bash

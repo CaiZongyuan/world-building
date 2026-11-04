@@ -4,4 +4,4 @@ GitHub 仓库 `world-building`（private）只存流程本身：skills、经验�
 
 ## 修订（2026-11-04）：方案预览进 GitHub
 
-用户要求把方案预览这一系列 HTML 放进 GitHub 仓库，方便直接浏览和对比各版本。例外范围只限方案预览：`uv run wb publish <项目>` 会把 `02-proposal/` 复制到仓库的 `proposals/<项目名>/`，复制时排除截图，图片统一用 JPG，每个项目约 1 MB 以内。项目目录里的那份仍然是源，验证门也只检查源。其余产物照旧只放 HF。
+用户要求把方案预览这一系列 HTML 放进 GitHub 仓库，方便直接浏览和对比各版本。例外范围只限方案预览：`uv run wb publish <项目>` 会把 `02-proposal/` 复制到仓库的 `proposals/<项目名>/`，复制时排除 `preview_*` 截图，图片统一用 WebP，每个项目约 0.5 MB。项目目录里的那份仍然是源，验证门也只检查源。其余产物照旧只放 HF。

@@ -42,7 +42,7 @@ def new_project(root: Path, title: str) -> None:
 
 
 # 发布到仓库时排除的文件（截图等过程产物，体积大且不需要版本化）
-PUBLISH_EXCLUDE = {"preview_full.png"}
+PUBLISH_EXCLUDE = ("preview_",)  # 前缀匹配：截图类过程产物
 
 
 def publish_proposal(project: Path, repo: Path) -> Path:
@@ -55,5 +55,5 @@ def publish_proposal(project: Path, repo: Path) -> Path:
     dst = repo / "proposals" / project.name
     if dst.exists():
         shutil.rmtree(dst)
-    shutil.copytree(src, dst, ignore=lambda d, names: [n for n in names if n in PUBLISH_EXCLUDE])
+    shutil.copytree(src, dst, ignore=lambda d, names: [n for n in names if n.startswith(PUBLISH_EXCLUDE)])
     return dst
