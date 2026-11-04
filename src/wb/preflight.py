@@ -165,6 +165,15 @@ def check_gripper(spec_d) -> list[dict]:
     return out
 
 
+def _site_target(pose, R, spec_d):
+    """位姿给的是工具点 pose.tcp_in_hand（缺省为夹具 TCP）的位置；换算成 TCP site 应到达的位置。"""
+    p = np.asarray(pose["pos"], float)
+    if "tcp_in_hand" not in pose:
+        return p
+    tool = np.asarray(spec_d["robot"]["tool"].get("tcp_in_hand", [0, 0, 0.1034]), float)
+    return p + R @ (tool - np.asarray(pose["tcp_in_hand"], float))
+
+
 def solve_pose(rb: Robot, pose, spec_d, seeds=200, clearance=0.005, ref_q=None, keep=6):
     """多初值 IK。返回 (候选列表, 信息)；候选按（接触数, 离参考构型距离）排序，无碰撞且彼此不同的构型最多保留 keep 组。"""
     clearance = pose.get("clearance", clearance)
@@ -194,7 +203,7 @@ def solve_pose(rb: Robot, pose, spec_d, seeds=200, clearance=0.005, ref_q=None, 
             proj = float((p - np.asarray(spec_d["robot"]["base"])) @ ax)
             seed[0] = np.clip(proj + (0 if k < seeds // 2 else rng.normal(0, 0.25)), rb.lo[0], rb.hi[0])
         R = Rs[k % len(Rs)]
-        q, err = rb.solve(p, R, seed)
+        q, err = rb.solve(_site_target(pose, R, spec_d), R, seed)
         if err[0] > 1e-4 or err[1] > 1e-3:
             continue
         rb.set_state(q, opening, movers)
@@ -217,7 +226,7 @@ def _approach(rb: Robot, pose, spec_d, q, R, clearance):
     """从目标位姿沿进入方向反向退出到预位姿，返回 (预位姿关节角, 最大跟踪误差, 接触)。"""
     a = np.asarray(pose["approach"], float); a /= np.linalg.norm(a)
     movers = _mover_defaults(spec_d) | pose.get("movers", {})
-    p1 = np.asarray(pose["pos"], float); p0 = p1 - a * pose["standoff"]
+    p1 = _site_target(pose, R, spec_d); p0 = p1 - a * pose["standoff"]
     pc = pose.get("clearance", clearance)
     qk, worst, seg_hits = q.copy(), 0.0, []
     for s in np.linspace(0, 1, 11)[1:]:
