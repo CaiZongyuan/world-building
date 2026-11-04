@@ -27,7 +27,7 @@ _Avoid_: 方案, preview, 报告
 _Avoid_: 步骤（留给工艺步骤）, step, phase
 
 **审批点 (Approval Checkpoint)**:
-阶段之间必须由人看过并点头才能继续的位置；共三个：方案预览后、参考图后、建模预览渲染后。
+阶段之间必须由人看过并点头才能继续的位置；共两个：方案预览后、参考图后。此后各阶段由 agent 全程自主推进。
 _Avoid_: 确认点, gate, 关卡
 
 **验证门 (Validation Gate)**:
