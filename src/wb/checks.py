@@ -221,17 +221,21 @@ def check_modelling(stage_dir: Path) -> list[Check]:
         r = [math.degrees(v) for v in m.jnt_range[m.joint(j).id]]
         if abs(r[0] - lo) > 0.01 or abs(r[1] - hi) > 0.01:
             bad.append(f"{j} {r[0]:.2f}…{r[1]:.2f}")
-    checks.append(Check("M1 MJCF 可编译且门范围正确", FAIL if bad else PASS, "; ".join(bad), [th["mjcf"]]))
+    for j, (lo, hi) in th.get("M1_joint_range_m", {}).items():   # 滑动关节（导轨、龙门）以米计
+        r = list(m.jnt_range[m.joint(j).id])
+        if abs(r[0] - lo) > 1e-4 or abs(r[1] - hi) > 1e-4:
+            bad.append(f"{j} {r[0]:.4f}…{r[1]:.4f} m")
+    checks.append(Check("M1 MJCF 可编译且关节范围正确", FAIL if bad else PASS, "; ".join(bad), [th["mjcf"]]))
 
     d = mujoco.MjData(m)
     mujoco.mj_forward(m, d)
     bad = []
-    for g, z in th["M2_shelf_tops"].items():
+    for g, z in (th.get("M2_surface_tops") or th["M2_shelf_tops"]).items():
         gid = m.geom(g).id
         top = d.geom_xpos[gid][2] + m.geom_size[gid][2]
         if abs(top - z) > th["M2_tol"]:
             bad.append(f"{g} 顶面 {top:.4f} ≠ {z}")
-    checks.append(Check("M2 隔板高度", FAIL if bad else PASS, "; ".join(bad), [th["mjcf"]]))
+    checks.append(Check("M2 关键支撑面高度", FAIL if bad else PASS, "; ".join(bad), [th["mjcf"]]))
 
     names = _glb_node_names(proj / th["glb"])
     col = [n for n in names if n.startswith("COL_") or "collision" in n.lower()]
@@ -266,6 +270,12 @@ def check_modelling(stage_dir: Path) -> list[Check]:
     ok = lo <= need[0] + 1e-9 and hi >= need[1] - 1e-9
     checks.append(Check("M6 偏置宽指开口范围", PASS if ok else FAIL, f"{lo:.3f}…{hi:.3f} m", ["05-modelling/design.json"]))
 
+    if th.get("M7_actuators"):
+        have = {m.actuator(i).name for i in range(m.nu)}
+        miss = [a for a in th["M7_actuators"] if a not in have]
+        checks.append(Check("M7 执行器齐全", FAIL if miss else PASS, "缺：" + ", ".join(miss) if miss else f"{len(th['M7_actuators'])} 个",
+                            [th["mjcf"]]))
+
     prev = sorted((stage_dir / "preview").glob("*.webp"))
     checks.append(Check("预览渲染（证据）", PASS if prev else FAIL, f"{len(prev)} 张", [f"05-modelling/preview/{p.name}" for p in prev]))
     return checks
@@ -290,15 +300,22 @@ def check_simulation(stage_dir: Path) -> list[Check]:
     r = json.loads(nom.read_text(encoding="utf-8"))
     sim_th = _thresholds(stage_dir).get("simulation", {})
     bad = [k for k, v in r["gates"].items() if v != "PASS"]
-    expected = set(sim_th.get("nominal_gates") or [f"S{i}" for i in range(1, 14)])
+    phase = r.get("phase")
+    if sim_th.get("phase_gates") and phase is not None:
+        # 分期项目：到本期为止（含）各期门限的并集；结果文件写明自己是第几期
+        expected = set().union(*(set(v) for k, v in sim_th["phase_gates"].items() if int(k) <= int(phase)))
+    else:
+        expected = set(sim_th.get("nominal_gates") or [f"S{i}" for i in range(1, 14)])
     missing = sorted(expected - set(r["gates"]))
-    checks.append(Check(f"名义流程 {len(expected)} 项门限", FAIL if bad or missing else PASS,
+    checks.append(Check(f"名义流程 {len(expected)} 项门限" + (f"（第 {phase} 期）" if phase is not None else ""), FAIL if bad or missing else PASS,
                         ("FAIL：" + ", ".join(bad) if bad else "") + (" 缺：" + ", ".join(missing) if missing else ""),
                         [f"06-simulation/results/nominal.json"]))
     negatives = sim_th.get("negatives") or []
     if not negatives:
         checks.append(Check("负例清单", FAIL, "thresholds.json 的 simulation.negatives 为空"))
     for neg in negatives:
+        if phase is not None and int(neg.get("phase", 0)) > int(phase):
+            continue   # 后续分期的负例，到那一期才要求
         name, label, gates = neg["variant"], f"{neg['id']} {neg['label']}", neg["expect_fail"]
         f = res / f"{name}.json"
         if not f.is_file():

@@ -52,4 +52,4 @@ def test_modelling_glb_with_collision_proxy_fails(tmp_path):
 
 def test_modelling_wrong_shelf_height_fails(tmp_path):
     r = run_gate(make(tmp_path, shelf_z=0.32), "modelling")
-    assert r.status == "FAIL" and "M2 隔板高度" in {c.name for c in r.checks if c.status == "FAIL"}
+    assert r.status == "FAIL" and "M2 关键支撑面高度" in {c.name for c in r.checks if c.status == "FAIL"}

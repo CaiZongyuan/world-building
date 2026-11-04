@@ -52,3 +52,20 @@ def test_negative_metric_condition(tmp_path):
     (p / "06-simulation" / "results" / "no_support.json").write_text(
         json.dumps({"gates": {"S7": "FAIL"}, "metrics": {"N1_plate_drop_after_release": 0.001}}))
     assert run_gate(p, "simulation").status == "FAIL"
+
+
+def test_phased_gates_and_negatives(tmp_path):
+    th = {"simulation": {"phase_gates": {"1": ["S1", "S2"], "2": ["S3"]},
+                         "negatives": [{"id": "N1", "label": "一期负例", "variant": "n1", "expect_fail": ["S1"], "phase": 1},
+                                       {"id": "N9", "label": "二期负例", "variant": "n9", "expect_fail": ["S3"], "phase": 2}]}}
+    (tmp_path / "p" / "03-plan").mkdir(parents=True)
+    (tmp_path / "p" / "03-plan" / "thresholds.json").write_text(json.dumps(th))
+    s = tmp_path / "p" / "06-simulation"
+    (s / "results").mkdir(parents=True)
+    (s / "states_30fps.npz").write_bytes(b"x")
+    w = lambda n, d: (s / "results" / f"{n}.json").write_text(json.dumps(d))  # noqa: E731
+    w("nominal", {"phase": 1, "gates": {"S1": "PASS", "S2": "PASS"}, "metrics": {}})
+    w("n1", {"gates": {"S1": "FAIL"}, "metrics": {}})
+    assert run_gate(tmp_path / "p", "simulation").status == "PASS"          # 第 1 期：S3、N9 尚不要求
+    w("nominal", {"phase": 2, "gates": {"S1": "PASS", "S2": "PASS"}, "metrics": {}})
+    assert run_gate(tmp_path / "p", "simulation").status != "PASS"          # 第 2 期：缺 S3、缺 N9 结果
