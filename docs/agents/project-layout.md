@@ -52,3 +52,19 @@ HF 不保存空目录。所以刚拉下来的项目缺少某个阶段目录很�
 - **Blender 5.4**：`/mnt/d/Environment/blender-5.4.0/blender.exe -b --factory-startup --python <脚本>`。路径参数必须先用 `wslpath -w` 转成 Windows 路径。每次启动约 7 秒，多个操作应合并到一个脚本里执行。
 - **MuJoCo**：`uv run --extra sim python ...`，CPU 运行。
 - **imagegen**：见 `image-generation.md`。
+
+## 运动学预演（`wb preflight`）
+
+方案预览阶段用它检查布局和夹具的运动学可行性：`uv run --extra sim wb preflight <preflight.json> [--out 目录]`，输出 `preflight_report.json` 和俯视图 `preflight_top.svg`。只做运动学，不跑动力学，一次几秒到几十秒。
+
+`preflight.json` 的字段（单位 m、rad；盒子的 `size` 是半尺寸）：
+
+- `robot`：`mjcf`（Menagerie Panda）、`base`、`yaw`；可选 `rail`（`axis`、`range`，导轨也作为 IK 的一个自由度）；`tool`：`tcp_in_hand`、`opening_range`，可选 `finger_boxes`（挂在左右手指上，右指自动镜像 x）、`hand_boxes`。
+- `static`：静态方盒代理，`name`、`pos`、`size`，可选 `yaw`。**尺寸取自真实资产**，代理过大会产生误报。
+- `movers`：门、抽屉等活动件：`joint`（`type` 为 hinge 或 slide，`anchor`、`axis`、`range`），`boxes`（相对锚点），可选 `rest`、`sweep_others`（扫掠时其他活动件的状态）、`attached_to`。
+- `workpieces`：`name`、`grip_width`，用来核对夹爪行程（两侧各留 `grip_margin`，默认 5 mm）。
+- `poses`：关键位姿，按顺序求解，后一个位姿优先选与前一个连续的构型。字段有 `pos`、`approach`（手爪进入方向）、`opening_axis`（手指张合方向）、`standoff`（沿进入方向的进出距离）、`movers`（此时各活动件的状态）、`finger_q`、`ignore`、`clearance`（贴着支撑面的夹取位姿可以放宽到 1 mm）；也可以直接给 `q` 关节角。两指夹爪默认对称（绕进入方向转 180° 视为同一个抓取）。
+- `transitions`：`[[起点, 终点], …]`。关节插值逐点检查碰撞，并在两端所有可用构型（每个位姿最多 6 组）的组合里找一条无接触的。
+- `clearance`：机器人与环境的安全余量，默认 5 mm。
+
+四类结果：`G` 夹爪行程、`P` 关键位姿（含进出段）、`D` 活动件扫掠、`T` 过渡。

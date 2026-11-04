@@ -165,7 +165,7 @@ def check_gripper(spec_d) -> list[dict]:
     return out
 
 
-def solve_pose(rb: Robot, pose, spec_d, seeds=48, clearance=0.005, ref_q=None, keep=6):
+def solve_pose(rb: Robot, pose, spec_d, seeds=200, clearance=0.005, ref_q=None, keep=6):
     """多初值 IK。返回 (候选列表, 信息)；候选按（接触数, 离参考构型距离）排序，无碰撞且彼此不同的构型最多保留 keep 组。"""
     clearance = pose.get("clearance", clearance)
     movers = _mover_defaults(spec_d) | pose.get("movers", {})

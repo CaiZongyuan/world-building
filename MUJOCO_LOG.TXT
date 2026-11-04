@@ -1687,3 +1687,24 @@ integrator: parent has 0 (default), child has 3, keeping parent value
 WARNING Wed Nov  4 23:32:29 2026: Attach conflict when attaching 'panda', policy is 'warning'
 integrator: parent has 0 (default), child has 3, keeping parent value
 
+WARNING Wed Nov  4 23:45:20 2026: Attach conflict when attaching 'panda', policy is 'warning'
+integrator: parent has 0 (default), child has 3, keeping parent value
+
+WARNING Wed Nov  4 23:45:25 2026: Attach conflict when attaching 'panda', policy is 'warning'
+integrator: parent has 0 (default), child has 3, keeping parent value
+
+WARNING Wed Nov  4 23:45:35 2026: Attach conflict when attaching 'panda', policy is 'warning'
+integrator: parent has 0 (default), child has 3, keeping parent value
+
+WARNING Wed Nov  4 23:45:45 2026: Attach conflict when attaching 'panda', policy is 'warning'
+integrator: parent has 0 (default), child has 3, keeping parent value
+
+WARNING Wed Nov  4 23:46:01 2026: Attach conflict when attaching 'panda', policy is 'warning'
+integrator: parent has 0 (default), child has 3, keeping parent value
+
+WARNING Wed Nov  4 23:46:15 2026: Attach conflict when attaching 'panda', policy is 'warning'
+integrator: parent has 0 (default), child has 3, keeping parent value
+
+WARNING Wed Nov  4 23:46:20 2026: Attach conflict when attaching 'panda', policy is 'warning'
+integrator: parent has 0 (default), child has 3, keeping parent value
+

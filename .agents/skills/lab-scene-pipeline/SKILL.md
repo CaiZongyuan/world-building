@@ -26,7 +26,7 @@ description: 场景流程：把实验室或工作站的需求一路做到可仿�
 
 ### 2 方案预览 → `02-proposal/index.html`（审批点①）
 1. 用 `uv run wb new` 建好项目；把 `templates/proposal/assets/` 复制到 `02-proposal/assets/`。
-2. **运动学预演**：设备、工件、夹具全部用方盒代理，做三件事：
+2. **运动学预演**（`uv run --extra sim wb preflight <preflight.json>`，格式见 `docs/agents/project-layout.md`）：设备、工件、夹具全部用方盒代理，尺寸取自真实资产，做三件事：
    - 核对夹爪行程是否覆盖工件尺寸；
    - 用多初值、带碰撞检查的 IK 解出取、放两个关键位姿，写明进出方向和张合轴；
    - 做两类扫掠检查：机器人对环境，门和抽屉对静态环境。
