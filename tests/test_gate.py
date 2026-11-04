@@ -53,3 +53,18 @@ def test_new_project_follows_contract(tmp_path):
     assert run_gate(p, "requirements").status == "FAIL"  # 目录在但没有需求记录
     with pytest.raises(FileExistsError):
         new_project(p, "again")
+
+
+def test_proposal_pass(project):
+    assert run_gate(project("proposal-pass"), "proposal").status == "PASS"
+
+
+@pytest.mark.parametrize("name,failed_check", [
+    ("proposal-ref-no-license", "外部素材：来源 / 许可 / 用途"),
+    ("proposal-hotlink", "图片本地化（无外链）"),
+    ("proposal-device-no-level", "设备：状态 / 难度等级 / 许可"),
+])
+def test_proposal_negative_fails(project, name, failed_check):
+    r = run_gate(project(name), "proposal")
+    assert r.status == "FAIL"
+    assert failed_check in {c.name for c in r.checks if c.status == "FAIL"}

@@ -41,3 +41,68 @@ def check_requirements(stage_dir: Path) -> list[Check]:
         else:
             checks.append(Check(f"必填节：{name}", PASS, evidence=[rel]))
     return checks
+
+
+# ---------------------------------------------------------------- 方案预览
+PROPOSAL_SECTIONS = ["goal", "renders", "layout", "devices", "steps", "stages", "risks", "references"]
+STATUSES = {"PASS", "FAIL", "NOT_RUN", "BLOCKED", "IDEALIZED"}
+LEVELS = {"L1", "L2", "L3", "L4", "L5"}
+FIDELITY = {"物理", "理想化", "符号化"}
+USAGE = {"仅参考", "可作资产"}
+
+
+def _proposal_data(html: str):
+    import json
+
+    m = re.search(r'<script[^>]*id="proposal-data"[^>]*>(.*?)</script>', html, re.S)
+    return json.loads(m.group(1)) if m else None
+
+
+@stage_check("proposal")
+def check_proposal(stage_dir: Path) -> list[Check]:
+    page = stage_dir / "index.html"
+    rel = f"{stage_dir.name}/index.html"
+    if not page.is_file():
+        return [Check("方案预览存在", FAIL, "缺少 index.html")]
+    html = page.read_text(encoding="utf-8")
+    checks = [Check("方案预览存在", PASS, evidence=[rel])]
+
+    missing = [s for s in PROPOSAL_SECTIONS if f'id="{s}"' not in html]
+    checks.append(Check("八节齐全", FAIL if missing else PASS, f"缺：{', '.join(missing)}" if missing else "", [rel]))
+
+    srcs = [s for s in re.findall(r"<img[^>]+src=\"([^\"]+)\"", html) if "${" not in s]  # 跳过 JS 模板占位符
+    remote = [s for s in srcs if re.match(r"^(https?:)?//", s)]
+    absent = [s for s in srcs if s not in remote and not s.startswith("data:") and not (stage_dir / s).is_file()]
+    checks.append(Check("图片本地化（无外链）", FAIL if remote else PASS, "外链：" + ", ".join(remote) if remote else "", [rel]))
+    checks.append(Check("图片文件存在", FAIL if absent else PASS, "缺：" + ", ".join(absent) if absent else "", [rel]))
+
+    try:
+        data = _proposal_data(html)
+    except ValueError as e:
+        data, err = None, str(e)
+    else:
+        err = "缺少 <script id=\"proposal-data\">"
+    if data is None:
+        checks.append(Check("结构化数据", FAIL, err, [rel]))
+        return checks
+
+    thumbs = [d["thumb"] for d in data.get("devices", []) if d.get("thumb")]
+    bad_thumbs = [t for t in thumbs if re.match(r"^(https?:)?//", t) or not (stage_dir / t).is_file()]
+    checks.append(Check("设备缩略图本地存在", FAIL if bad_thumbs else PASS,
+                        "问题：" + ", ".join(bad_thumbs) if bad_thumbs else "", [rel]))
+
+    bad_dev = [d.get("name", "?") for d in data.get("devices", [])
+               if d.get("status") not in STATUSES or d.get("difficulty") not in LEVELS or not d.get("license")]
+    checks.append(Check("设备：状态 / 难度等级 / 许可", FAIL if bad_dev or not data.get("devices") else PASS,
+                        "不完整：" + ", ".join(bad_dev) if bad_dev else "", [rel]))
+
+    bad_step = [s.get("name", "?") for s in data.get("steps", [])
+                if s.get("difficulty") not in LEVELS or s.get("fidelity") not in FIDELITY]
+    checks.append(Check("工艺步骤：难度等级 / 保真度", FAIL if bad_step or not data.get("steps") else PASS,
+                        "不完整：" + ", ".join(bad_step) if bad_step else "", [rel]))
+
+    bad_ref = [r.get("title", "?") for r in data.get("references", [])
+               if not re.match(r"^https?://", r.get("url", "")) or not r.get("license") or r.get("usage") not in USAGE]
+    checks.append(Check("外部素材：来源 / 许可 / 用途", FAIL if bad_ref else PASS,
+                        "不完整：" + ", ".join(bad_ref) if bad_ref else "", [rel]))
+    return checks
