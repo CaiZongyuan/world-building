@@ -1,0 +1,15 @@
+# 项目产物与生成物不进 git（见 docs/adr/0002）
+output/
+.scratch/
+projects/
+*.blend
+*.blend1
+*.usd
+*.usdc
+*.glb
+*.obj
+*.stl
+*.mp4
+*.zip
+__pycache__/
+.venv/
