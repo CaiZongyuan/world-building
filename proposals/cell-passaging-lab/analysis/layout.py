@@ -15,16 +15,16 @@ FINGER = json.loads((S1 / "05-modelling/design.json").read_text())["offset_finge
 D2R = math.radians
 
 LAYOUT = dict(
-    rail=dict(base=[0.0, 0.0, 0.60], range=[0.0, 2.95]),
+    rail=dict(base=[0.0, 0.0, 0.85], range=[0.0, 2.95]),           # 仿真阶段修订 0.60 → 0.85：放板高度落在基座上方 0.05–0.15 的"低带"，肩高于工作站台面
     # 南侧（y < 0）：离心台（离心机、开盖器、配平管架）→ 观察站 → 培养箱（放在导轨末端，铰链在外侧，门往导轨外开）
     centrifuge=dict(pos=[0.55, -0.70, 0.70], yaw=math.pi),        # 正面朝 +Y（导轨）；台面高 0.72
     decapper=dict(pos=[1.05, -0.56, 0.70], yaw=math.pi),
     side_rack=dict(pos=[0.08, -0.56, 0.70], yaw=math.pi),          # 配平管架
-    imager=dict(pos=[1.75, -0.78, 0.60], yaw=math.pi),            # 台面高 0.60，抽屉朝导轨伸出
-    incubator=dict(pos=[2.85, -1.00, 0.12], yaw=math.pi),         # 垫高 0.12（门下沿高过导轨梁）；正面朝 +Y；左铰链 → 世界 +X 侧（x = 3.20）
+    imager=dict(pos=[1.75, -0.78, 0.85], yaw=math.pi),            # 台面高 0.85（仿真阶段修订，原 0.60）：放板高度落在可达高度带 0.92–1.12
+    incubator=dict(pos=[2.85, -1.00, 0.40], yaw=math.pi),         # 底座 0.40（仿真阶段修订，原 0.12）：第 3 层放板高度约 0.96；左铰链 → 世界 +X 侧
     # 北侧（y > 0）：移液工作站（前门朝导轨）、固体废物箱
-    workstation=dict(pos=[1.55, 1.12, 0.0], yaw=0.0),
-    waste=dict(pos=[0.30, 0.70, 0.0], yaw=0.0),
+    workstation=dict(pos=[1.55, 1.02, 0.0], yaw=0.0),             # 仿真阶段修订 1.12 → 1.02：手掌朝上时 0.94 m 高度最远约 0.95 m
+    waste=dict(pos=[2.20, -0.70, 0.0], yaw=0.0),                 # 仿真阶段修订：挪到南侧观察站与培养箱之间，投放不用转身
 )
 
 PLATE_TCP_Z = 0.0085        # 指垫中心离板底（薄切片 01）
@@ -125,7 +125,7 @@ static.append(box("workstation", "tube_holder_B", [0.0, TUBE_HOLDER_Y + 0.02, DE
 # ---------------- 离心机（centrifuge_lumen_v03，局部：原点在地面中心，正面 -Y，盖铰链在后方）
 cz = LAYOUT["centrifuge"]["pos"][2]
 static.append(dict(name="centrifuge_bench", pos=[0.58, -0.72, cz / 2], size=[0.62, 0.27, cz / 2]))
-static.append(dict(name="incubator_plinth", pos=[2.85, -1.0, 0.06], size=[0.36, 0.36, 0.06]))
+static.append(dict(name="incubator_plinth", pos=[2.85, -1.0, LAYOUT["incubator"]["pos"][2] / 2], size=[0.36, 0.36, LAYOUT["incubator"]["pos"][2] / 2]))
 static += [box("centrifuge", "front", [0, -0.246, 0.162], [0.23, 0.014, 0.112]), box("centrifuge", "rear", [0, 0.248, 0.162], [0.23, 0.012, 0.112]),
            box("centrifuge", "left", [-0.233, 0, 0.162], [0.003, 0.236, 0.112]), box("centrifuge", "right", [0.233, 0, 0.162], [0.003, 0.236, 0.112]),
            box("centrifuge", "base", [0, 0, 0.04], [0.23, 0.26, 0.04]), box("centrifuge", "rotor", [0, 0, 0.12], [0.10, 0.10, 0.04]),
@@ -153,16 +153,15 @@ static.append(box("side_rack", "rack", [0, 0, 0.015], [0.06, 0.04, 0.015]))
 poses.append(dict(name="side_rack_tube", pos=tf("side_rack", [0, 0, 0.03 + TUBE_L - 0.015]), tcp_in_hand=STOCK_TCP,
                   approach=[0, 0, -1], opening_axis=rot("side_rack", [1, 0, 0]), standoff=0.10, clearance=0.002, finger_q=TUBE_R))
 
-# ---------------- 固体废物箱（新建）：0.40 × 0.30，高 0.55，开口朝上；板在箱口上方 0.10 松手
-wp = LAYOUT["waste"]["pos"]
-for n, p, s in [("w_front", [0, -0.15, 0.275], [0.20, 0.005, 0.275]), ("w_back", [0, 0.15, 0.275], [0.20, 0.005, 0.275]),
-                ("w_left", [-0.20, 0, 0.275], [0.005, 0.15, 0.275]), ("w_right", [0.20, 0, 0.275], [0.005, 0.15, 0.275])]:
-    static.append(box("waste", n, p, s))
-poses.append(dict(name="waste_drop", pos=tf("waste", [0, 0, 0.55 + 0.10]), approach=[0, 1, 0], opening_axis=[1, 0, 0],
-                  finger_q=0.1278 / 2 - FINGER["pad_y"]))
+# ---------------- 固体废物托盘（新建；仿真阶段修订：由 0.55 m 高的开口箱改为与放板高度同高的托盘，物品水平送入、贴底松手）
+for n, p_, s in [("tray_floor", [0, 0, 0.885], [0.255, 0.16, 0.01]), ("w_back", [0, -0.155, 0.92], [0.255, 0.005, 0.025]),
+                 ("w_w", [-0.25, 0, 0.92], [0.005, 0.16, 0.025]), ("w_e", [0.25, 0, 0.92], [0.005, 0.16, 0.025])]:
+    static.append(box("waste", n, p_, s))
+poses.append(dict(name="waste_drop", pos=tf("waste", [0, 0.0, 0.895 + 0.010 - 0.0021 + 0.0085]), approach=[0, -1, 0], opening_axis=[-1, 0, 0],
+                  finger_q=0.1278 / 2 - FINGER["pad_y"], clearance=0.001))
 
 # ---------------- 停靠位（导轨中段，手臂收拢）
-poses.insert(0, dict(name="park", pos=[1.2, -0.30, 1.10], approach=[0, 0, -1], opening_axis=[1, 0, 0]))
+poses.insert(0, dict(name="park", pos=[2.0, -0.30, 1.10], approach=[0, 0, -1], opening_axis=[1, 0, 0]))   # 避开工作站门的扫掠区
 
 # ---------------- 门口过渡点（via）：真实规划先退到工位门口，再沿导轨移动
 def via(name, x, side, approach, z=1.0, opening=(1, 0, 0), finger_q=0.04, tcp=None):
@@ -177,7 +176,7 @@ via("imager", LAYOUT["imager"]["pos"][0], -1, [0, -1, 0], finger_q=PLATE_Q)
 via("ws_A", tf("workstation", [-0.25, 0, 0])[0], 1, [0, 1, 0], finger_q=PLATE_Q)
 via("ws_C", tf("workstation", [0.25, 0, 0])[0], 1, [0, 1, 0], finger_q=PLATE_Q)
 via("ws_B", tf("workstation", [0, 0, 0])[0], 1, [0, 1, 0], finger_q=TUBE_R, tcp=STOCK_TCP)
-via("waste", LAYOUT["waste"]["pos"][0], 1, [0, 1, 0], finger_q=PLATE_Q)
+via("waste", LAYOUT["waste"]["pos"][0], -1, [0, -1, 0], finger_q=PLATE_Q)
 via("decapper", LAYOUT["decapper"]["pos"][0], -1, [0, 0, -1], z=1.05, finger_q=TUBE_R, tcp=STOCK_TCP)
 via("centrifuge", LAYOUT["centrifuge"]["pos"][0], -1, [0, -0.5, -0.866], z=1.10, finger_q=TUBE_R, tcp=STOCK_TCP)
 via("side_rack", LAYOUT["side_rack"]["pos"][0] + 0.1, -1, [0, 0, -1], z=1.05, finger_q=TUBE_R, tcp=STOCK_TCP)
@@ -207,10 +206,13 @@ for a_, b_ in zip(ROUTE, ROUTE[1:]):
 first = {n: i for i, n in reversed(list(enumerate(ROUTE)))}
 poses.sort(key=lambda p: first.get(p["name"], 999))
 
+for p in poses:
+    if "tcp_in_hand" not in p and "q" not in p:
+        p["symmetric"] = False   # 偏置宽指：指垫在手掌下方 70 mm，绕进入方向转 180° 不是同一个抓取
 spec = dict(
     clearance=0.005,
     robot=dict(mjcf="/mnt/d/Projects/Robots/assets/third_party/menagerie_franka_emika_panda/panda.xml",
-               base=r["base"], yaw=math.pi / 2, rail=dict(axis=[1, 0, 0], range=r["range"]),
+               base=r["base"], yaw=0.0, rail=dict(axis=[1, 0, 0], range=r["range"]),
                tool=dict(tcp_in_hand=[FINGER["tcp_in_hand_x"], 0, FINGER["tcp_in_hand_z"]], opening_range=[0.0, FINGER["opening_range"][1]],
                          finger_boxes=[dict(name=p["name"], pos=p["pos"], size=p["size"]) for p in FINGER["parts"]])),
     static=static, movers=movers,
