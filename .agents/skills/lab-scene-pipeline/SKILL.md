@@ -20,7 +20,9 @@ description: 场景流程：把实验室或工作站的需求一路做到可仿�
 ## 阶段
 
 ### 1 需求访谈 → `01-requirements/requirements.md`
-用 grilling 的方式分轮提问，只问会改变方案的决定（范围、执行者、保真度、预算），能查到的事实先由子代理查清。需求记录必须包含六节：目标、不做什么、工艺步骤、设备、保真度、算力预算。做法见 `docs/lessons/01-requirements-grilling.md`。
+用 grilling 的方式分轮提问，只问会改变方案的决定（范围、执行者、保真度、预算），能查到的事实先由子代理查清。需求记录必须包含六节：目标、不做什么、工艺步骤、设备、保真度、算力预算。
+
+写需求记录之前，先把**场景、流程、资产三张清单**摊开给用户确认。资产要实查（能不能编译、缺不缺文件），不能只看说明文档。范围大时，做一页范围预览 `01-requirements/preview/index.html`。做法见 `docs/lessons/01-requirements-grilling.md`。
 
 ### 2 方案预览 → `02-proposal/index.html`（审批点①）
 1. 用 `uv run wb new` 建好项目；把 `templates/proposal/assets/` 复制到 `02-proposal/assets/`。
