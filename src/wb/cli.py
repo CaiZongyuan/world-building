@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 from wb.gate import STAGES, run_gate
-from wb.project import new_project
+from wb.project import new_project, publish_proposal
 
 ICON = {"PASS": "✅", "FAIL": "❌", "NOT_RUN": "⏸", "BLOCKED": "⛔", "IDEALIZED": "🟡"}
 
@@ -21,7 +21,15 @@ def main(argv: list[str] | None = None) -> int:
     n = sub.add_parser("new", help="按项目目录契约新建项目")
     n.add_argument("project", type=Path)
     n.add_argument("--title", required=True)
+    pub = sub.add_parser("publish", help="把项目的方案预览复制到仓库 proposals/<项目名>/")
+    pub.add_argument("project", type=Path)
+    pub.add_argument("--repo", type=Path, default=Path(__file__).resolve().parents[2])
     a = p.parse_args(argv)
+
+    if a.cmd == "publish":
+        dst = publish_proposal(a.project, a.repo)
+        print(f"已发布到 {dst}")
+        return 0
 
     if a.cmd == "new":
         new_project(a.project, a.title)

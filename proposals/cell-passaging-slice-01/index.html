@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>薄切片 01 方案预览</title>
+<style>
+:root{--bg:#fafaf8;--card:#fff;--ink:#1d2329;--mute:#5d6873;--line:#e2e4e6;--acc:#0b6e69;--acc2:#e6f2f1;
+--pass:#1f7a3a;--fail:#b3261e;--notrun:#7a6a00;--ideal:#9a5b00;--blocked:#6b1fa3}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 "PingFang SC","Microsoft YaHei","Noto Sans CJK SC",system-ui,sans-serif}
+main{max-width:1120px;margin:0 auto;padding:32px 20px 80px}
+header h1{font-size:28px;margin:0 0 4px}
+header p{margin:0;color:var(--mute)}
+nav{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--line);padding:8px 0;margin:20px 0 8px;z-index:2;display:flex;flex-wrap:wrap;gap:4px 16px;font-size:14px}
+nav a{color:var(--acc);text-decoration:none}
+section{margin:40px 0}
+h2{font-size:21px;border-left:4px solid var(--acc);padding-left:10px;margin:0 0 14px}
+h3{font-size:16px;margin:18px 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:800px){.grid2,.grid3{grid-template-columns:1fr}}
+figure{margin:0}
+figure img{width:100%;border-radius:8px;border:1px solid var(--line);display:block}
+figcaption{font-size:13px;color:var(--mute);margin-top:6px}
+table{width:100%;border-collapse:collapse;background:var(--card);font-size:14px}
+th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:#f1f3f4;font-weight:600}
+td img{width:96px;border-radius:6px;border:1px solid var(--line)}
+.tag{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;font-weight:600;color:#fff;white-space:nowrap}
+.PASS{background:var(--pass)}.FAIL{background:var(--fail)}.NOT_RUN{background:var(--notrun)}.IDEALIZED{background:var(--ideal)}.BLOCKED{background:var(--blocked)}
+.lv{display:inline-block;min-width:28px;text-align:center;border-radius:4px;font-weight:700;font-size:12px;padding:1px 4px;border:1px solid}
+.L1{color:#1f7a3a;border-color:#1f7a3a}.L2{color:#0b6e69;border-color:#0b6e69}.L3{color:#9a5b00;border-color:#9a5b00}.L4{color:#b3261e;border-color:#b3261e}.L5{color:#6b1fa3;border-color:#6b1fa3}
+.decide{background:#fff8e6;border:1px solid #f0d58a;border-radius:10px;padding:14px 18px}
+.decide li{margin:6px 0}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}
+.st{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-width:112px}
+.st b{display:block}.st small{color:var(--mute)}
+.st.done{border-color:var(--pass)}.st.now{border:2px solid var(--acc);background:var(--acc2)}
+.ck{align-self:center;background:#fff3cd;border:1px dashed #c99a00;border-radius:99px;padding:4px 10px;font-size:13px;font-weight:600}
+.arrow{align-self:center;color:var(--mute)}
+.mute{color:var(--mute)}
+code{background:#f1f3f4;padding:0 4px;border-radius:4px;font-size:13px}
+.legend span{margin-right:14px;font-size:13px}
+svg text{font-family:inherit}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>细胞传代薄切片 01：开培养箱取板，送到观察站</h1>
+<p>方案预览 · 2026-11-04 · 项目 <code>cell-passaging-slice-01</code> · 流程阶段：方案预览（审批点①已通过）</p>
+</header>
+<nav>
+<a href="#goal">1 目标</a><a href="#renders">2 效果图</a><a href="#layout">3 布局</a><a href="#devices">4 设备</a><a href="#steps">5 工艺步骤</a><a href="#stages">6 流程阶段</a><a href="#risks">7 风险与难度</a><a href="#references">8 外部参考</a>
+</nav>
+
+<section id="goal">
+<h2>1 目标与不做什么</h2>
+<div class="grid2">
+<div class="card">
+<h3>目标</h3>
+<p>在黑灯实验室场景中完整跑通一个工艺步骤：电动培养箱开门 → Panda 从<b>第 3 层隔板</b>取出带盖六孔板 → 放进观察站伸出的抽屉，确认托住后松爪 → Panda 回到停靠位 → 抽屉收回，培养箱关门。</p>
+<p>全程使用真实物理（MuJoCo），渲染为正常照明成片，<b>不加速、不剪辑</b>。</p>
+<p class="mute">这个项目真正的交付物是<b>流程</b>：阶段日志、经验记录，以及最终提炼出的 skill。场景只是验收载体。</p>
+</div>
+<div class="card">
+<h3>不做什么</h3>
+<ul>
+<li>移液、开盖、液体、离心、计数、分板</li>
+<li>Panda 推拉门（门和抽屉由执行器驱动）</li>
+<li>吸头装卸、旋盖等已知 BLOCKED / FAIL 难点</li>
+<li>黑灯氛围灯光、加速、剪辑</li>
+<li>Newton / UE5 / Isaac、导轨或 AMR、商用许可审查</li>
+</ul>
+</div>
+</div>
+<div class="decide" style="margin-top:16px">
+<b>工程决策（由 agent 根据事实核查决定）</b>
+<ol>
+<li><b>夹爪：用定制外偏置宽指，不用原装手指。</b>Panda 原装夹爪行程 80 mm，六孔板短边 85.5 mm、长边 127.8 mm，原装手指夹不住。做法是在两根原装手指上各加一段外偏置指，让 0–80 mm 的行程覆盖约 110–190 mm 的开口，夹板的两个短端。P3 用的也是 ±72 mm 的定制夹爪。见 R1。</li>
+<li><b>取板位置：第 3 层（z≈0.555 m），板靠门放（板心 y≈−0.18 m）。</b>可达性初筛：沿用 P3 布局时，第 1 层够不到；第 2 层要把 TCP 加长到 0.16 m 才够到；板放得再深，哪一层都够不到。见 R2。</li>
+<li><b>新培养箱外形：0.70 × 0.70 × 0.95 m。</b>与 P1-B 同一量级，方便对比。真实的 Heracell VIOS 160i 约 0.64 × 0.88 × 0.90 m，进深更大，所以这个尺寸是设计假设。</li>
+</ol>
+</div>
+</section>
+
+<section id="renders">
+<h2>2 场景效果图</h2>
+<p class="mute">以下均为 AI 生成的<b>概念图</b>（gpt-image-2.5-flare），只用来对齐画面风格，不是工程图，尺寸、比例和机构细节以第 3、4 节为准。</p>
+<figure><img src="img/scene_wide.jpg" alt="全景"><figcaption>全景：左边培养箱（外门、内玻璃门打开，四层隔板），中间 Panda 和底座，右边台面上的观察站，抽屉朝机器人伸出。</figcaption></figure>
+<div class="grid2" style="margin-top:14px">
+<figure><img src="img/grasp_shelf.jpg" alt="取板"><figcaption>取板：偏置宽指从前方水平伸入，夹住板的两个短端，盖自由放在板上。</figcaption></figure>
+<figure><img src="img/place_drawer.jpg" alt="放板"><figcaption>放板：自上而下把板放进抽屉托槽，四角导向。确认托住后才松爪。</figcaption></figure>
+</div>
+</section>
+
+<section id="layout">
+<h2>3 布局俯视图</h2>
+<div class="grid2">
+<div class="card">
+<svg viewBox="0 0 560 650" width="100%" role="img" aria-label="布局俯视图">
+<defs>
+<pattern id="g" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0V30" fill="none" stroke="#eef0f1"/></pattern>
+<marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0b6e69"/></marker>
+</defs>
+<rect width="560" height="650" fill="url(#g)"/>
+<!-- 坐标：X=(x+0.6)*300+20, Y=(0.5-y)*300+20 -->
+<circle cx="265" cy="485" r="256" fill="#0b6e69" fill-opacity=".05" stroke="#0b6e69" stroke-dasharray="4 4"/>
+<circle cx="265" cy="485" r="295" fill="none" stroke="#0b6e69" stroke-opacity=".5" stroke-dasharray="2 6"/>
+<text x="20" y="640" font-size="12" fill="#0b6e69">虚线圈：肩部高度水平臂展 0.855 m（内）/ 含偏置指 TCP 约 0.98 m（外）</text>
+<!-- 培养箱 -->
+<rect x="95" y="65" width="210" height="210" fill="#fff" stroke="#1d2329" stroke-width="2"/>
+<rect x="110" y="80" width="180" height="180" fill="#f1f3f4" stroke="#9aa3ab"/>
+<text x="200" y="130" text-anchor="middle" font-size="14" font-weight="600">培养箱（新建）</text>
+<text x="200" y="148" text-anchor="middle" font-size="12" fill="#5d6873">0.70×0.70×0.95 m · 原点</text>
+<path d="M100 285 L35 380" stroke="#1d2329" stroke-width="4"/><path d="M100 285 A115 115 0 0 1 35 380" fill="none" stroke="#9aa3ab" stroke-dasharray="3 3"/>
+<text x="28" y="398" font-size="12" fill="#5d6873">外门 0–115°</text>
+<path d="M290 270 L330 330" stroke="#7fb6d6" stroke-width="3"/>
+<text x="318" y="347" font-size="12" fill="#5d6873">内玻璃门</text>
+<rect x="161" y="211" width="78" height="26" fill="#f6c7cc" stroke="#b3261e"/>
+<text x="200" y="205" text-anchor="middle" font-size="12" fill="#b3261e">取板：第 3 层，板心 (0, −0.18)</text>
+<!-- 底座与 Panda -->
+<circle cx="265" cy="485" r="48" fill="#fff" stroke="#1d2329" stroke-width="2"/>
+<text x="265" y="481" text-anchor="middle" font-size="12" font-weight="600">Panda</text>
+<text x="265" y="496" text-anchor="middle" font-size="11" fill="#5d6873">(0.25, −1.05, 0.5)</text>
+<!-- 台面与观察站 -->
+<rect x="306" y="464" width="174" height="141" fill="#f7f7f5" stroke="#9aa3ab" stroke-dasharray="5 3"/>
+<text x="474" y="598" text-anchor="end" font-size="11" fill="#5d6873">台面 z=0.6</text>
+<rect x="337" y="480" width="87" height="99" fill="#fff" stroke="#1d2329" stroke-width="2"/>
+<text x="380" y="535" text-anchor="middle" font-size="12" font-weight="600">观察站</text>
+<text x="380" y="551" text-anchor="middle" font-size="11" fill="#5d6873">(0.6, −1.2) 转 180°</text>
+<rect x="360" y="430" width="40" height="50" fill="#e6f2f1" stroke="#0b6e69"/>
+<rect x="361" y="444" width="38" height="26" fill="#f6c7cc" stroke="#b3261e"/>
+<text x="406" y="440" font-size="11" fill="#0b6e69">抽屉伸出 190 mm</text>
+<!-- 路径 -->
+<path d="M200 237 L200 320 Q250 400 362 452" fill="none" stroke="#0b6e69" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#ar)"/>
+<circle cx="200" cy="320" r="5" fill="#0b6e69"/><text x="140" y="324" font-size="12" fill="#0b6e69">门外预备位</text>
+<!-- 比例尺 -->
+<path d="M400 30h150" stroke="#1d2329" stroke-width="2"/><text x="475" y="24" text-anchor="middle" font-size="12">0.5 m</text>
+<text x="20" y="30" font-size="12" fill="#5d6873">↑ +Y（培养箱背面） · → +X</text>
+</svg>
+</div>
+<div class="card">
+<h3>布局要点</h3>
+<ul>
+<li>起点沿用 P3 坐标，单位 m，Z 轴朝上。培养箱前方是 −Y 方向，观察站旋转 180° 后正面朝 +Y，抽屉向 Panda 方向伸出。</li>
+<li>取板时手指沿 X 方向张合，从 −Y 侧水平伸入；放板时自上而下放入，手指同样沿 X 方向。</li>
+<li>新培养箱的隔板高度按可达性来设计：<b>第 3 层要落在可达范围中段</b>，不追求和 P1-B 层高一致。</li>
+<li>建模完成后允许微调布局，每次调整都要在阶段日志里记录原因。</li>
+</ul>
+<h3>可达性初筛（运动学 IK，不含碰撞）</h3>
+<table>
+<tr><th>目标位姿</th><th>TCP 0.103 m（原装）</th><th>TCP 0.16 m</th></tr>
+<tr><td>第 1 层 z=0.315</td><td>❌</td><td>❌</td></tr>
+<tr><td>第 2 层 z=0.435</td><td>❌</td><td>✅</td></tr>
+<tr><td><b>第 3 层 z=0.555</b></td><td>✅</td><td>✅</td></tr>
+<tr><td>第 4 层 z=0.675</td><td>✅</td><td>✅</td></tr>
+<tr><td>任一层，板心更深 y=−0.065</td><td>❌</td><td>❌（第 4 层差 33 mm）</td></tr>
+<tr><td>门外预备位 / 抽屉放板位</td><td>✅</td><td>✅</td></tr>
+</table>
+<p class="mute" style="font-size:13px">脚本与结果：<code>02-proposal/analysis/reach_screen.py</code> 及同目录 JSON。只验证运动学，没有算碰撞和关节力矩；实际能否做到要到仿真阶段确认。</p>
+</div>
+</div>
+</section>
+
+<section id="devices">
+<h2>4 设备清单</h2>
+<p class="legend mute"><span><span class="tag PASS">PASS</span> 原资产证据通过（有界）</span><span><span class="tag NOT_RUN">NOT_RUN</span> 本项目尚未验证</span><span><span class="tag IDEALIZED">IDEALIZED</span> 显式理想化，不计 PASS</span></p>
+<div id="device-table"></div>
+</section>
+
+<section id="steps">
+<h2>5 工艺步骤时间线</h2>
+<div id="step-table"></div>
+<p class="mute">本项目全部工艺步骤都用真实物理，没有理想化或符号化的工艺步骤。唯一的理想化是机器人底座的支撑（见 R6）。不使用 weld、mocap 或跟随约束伪造支撑。负例需要另外跑：抽掉支撑后板必须掉落；把部件过插时必须检测到碰撞。</p>
+</section>
+
+<section id="stages">
+<h2>6 流程阶段</h2>
+<div class="flow">
+<div class="st done"><b>需求访谈</b><small>✅ 已完成</small></div><span class="arrow">→</span>
+<div class="st done"><b>方案预览</b><small>✅ 审批点①通过</small></div><span class="arrow">→</span>
+<span class="ck">审批点①</span><span class="arrow">→</span>
+<div class="st"><b>plan</b><small>冻结验收门限</small></div><span class="arrow">→</span>
+<div class="st"><b>参考图</b><small>培养箱参考板</small></div><span class="arrow">→</span>
+<span class="ck">审批点②（同时审 plan）</span><span class="arrow">→</span>
+<div class="st"><b>建模</b><small>Blender 5.4</small></div><span class="arrow">→</span>
+<div class="st"><b>仿真</b><small>MuJoCo</small></div><span class="arrow">→</span>
+<div class="st"><b>位姿绑定与渲染</b><small>Cycles OptiX</small></div><span class="arrow">→</span>
+<div class="st"><b>汇总复盘 → skill</b><small>经验记录</small></div>
+</div>
+<p>审批点②之后由 agent 全程自主推进。每个阶段都要经过验证门（PASS / FAIL / NOT_RUN / BLOCKED / IDEALIZED，附证据），并写阶段日志（记录实测数据）和经验记录。遇到失败先复盘、调整做法，再继续推进；只有完全卡死时才报告。</p>
+</section>
+
+<section id="risks">
+<h2>7 风险与难度</h2>
+<table>
+<tr><th>#</th><th>风险</th><th>难度</th><th>证据 / 历史</th><th>对策</th></tr>
+<tr><td>R1</td><td><b>原装夹爪夹不住板</b>：行程 80 mm，而板为 85.5 × 127.8 mm</td><td><span class="lv L3">L3</span></td><td>Franka Hand 规格（外部参考）；P3 用的是 ±72 mm 的定制夹爪</td><td>定制外偏置宽指（待审批点①确认）；作为新建部件纳入建模阶段</td></tr>
+<tr><td>R2</td><td><b>可达性</b>：沿用 P3 布局时，低层隔板和深处的板都够不到</td><td><span class="lv L3">L3</span></td><td>本项目 IK 初筛（第 3 节）</td><td>取第 3 层，板心 y≈−0.18；隔板高度按可达性设计</td></tr>
+<tr><td>R3</td><td>隔板间距约 120 mm，手部水平伸入时可能碰到上层隔板；搬运中盖可能滑动</td><td><span class="lv L3">L3</span></td><td>P3 有盖 xy / z 偏差的指标；本项目尚无</td><td>仿真门限加入"禁止接触对"和盖位移上限，在 plan 阶段冻结</td></tr>
+<tr><td>R4</td><td>被动自由体漂移超限</td><td><span class="lv L1">L1</span></td><td>P3 r2：0.225 mm，超过 0.1 mm 门限，<b>FAIL</b>；v3 加入 21 s 预静置后为 0.004 mm</td><td>工艺步骤 0 做预静置，通过稳定窗口检查后再开始计时</td></tr>
+<tr><td>R5</td><td>"支撑后释放"误判</td><td><span class="lv L3">L3</span></td><td>transfer_negative_audit_v10：支撑力 0 N 时，于 86.781 s 正确触发失败</td><td>松爪前检测抽屉对板的支撑反力；用 <code>no_support</code> 负例验证</td></tr>
+<tr><td>R6</td><td>机器人底座只有 2 µm 间隙、接触面积为 0，机器人固定在世界坐标系</td><td><span class="lv L1">L1</span></td><td>robot_pedestal_lumen_v02 README</td><td>接受，标为 IDEALIZED 并公开说明；本项目不做安装件受力</td></tr>
+<tr><td>R7</td><td>渲染成本：不加速，帧数等于仿真时长 × 30</td><td><span class="lv L1">L1</span></td><td>P3 用 CPU 渲染，实测 89–192 s/帧；OptiX 的吞吐尚未实测</td><td>先做吞吐测试；超预算时降低采样数、加强降噪，<b>不加速</b></td></tr>
+<tr><td>R8</td><td>Blender 5.4 是 <b>Alpha</b> 版</td><td><span class="lv L1">L1</span></td><td>冒烟测试 PASS；Alpha 版 API 可能变动</td><td>每次出现异常都记入阶段日志；必要时改用 5.3 正式版</td></tr>
+<tr><td>R9</td><td>P3 v3 无法从归档复现，只能作为数据对照</td><td><span class="lv L1">L1</span></td><td>REUSE_INVENTORY：缺场景 assets 和轨迹 npz</td><td>只比较时长、步数、门限和结果数值</td></tr>
+</table>
+<h3>总体仿真难度</h3>
+<p>最高难度等级为 <span class="lv L3">L3</span>（抓取与接触），没有 L4 / L5。最可能卡住的是 <b>R1 + R3</b>：偏置宽指能不能稳稳夹住板，并在不刮到隔板的情况下带盖退出。这一段的难度与 P3 的携板环节相当。</p>
+</section>
+
+<section id="references">
+<h2>8 外部参考</h2>
+<p class="mute">只引用文字和数据，不下载、不嵌入外部图片。"可作资产"表示许可允许直接用于交付物。</p>
+<div id="ref-table"></div>
+</section>
+
+<script type="application/json" id="proposal-data">
+{
+"devices":[
+{"name":"培养箱","source":"新建","asset":"本流程从参考图开始建模","license":"Lumen 原创（本项目）","status":"NOT_RUN","difficulty":"L2","thumb":"img/thumbs/incubator_concept.jpg","note":"外门 + 内玻璃门（执行器驱动）、4 层隔板；对照 P1-B"},
+{"name":"偏置宽指","source":"新建","asset":"装在 Panda 原装手指上","license":"原创（本项目）","status":"NOT_RUN","difficulty":"L3","thumb":"","note":"待审批点①确认；张开范围约 110–190 mm"},
+{"name":"观察站","source":"复用","asset":"plate_imager_p0","license":"Lumen 原创","status":"PASS","difficulty":"L2","thumb":"img/thumbs/imager.jpg","note":"抽屉 0–190 mm；原资产自带 no_support 负例"},
+{"name":"六孔板与盖","source":"复用","asset":"small_lab_lumen_v1/sixwell","license":"Lumen 原创","status":"PASS","difficulty":"L3","thumb":"img/thumbs/sixwell.jpg","note":"127.8 × 85.5 mm；板、盖分别为自由刚体"},
+{"name":"Panda","source":"复用（上游）","asset":"Menagerie franka_emika_panda @98a70c5","license":"Apache-2.0","status":"NOT_RUN","difficulty":"L3","thumb":"img/thumbs/panda.jpg","note":"上游模型能编译；本场景尚未验证"},
+{"name":"机器人底座","source":"复用","asset":"robot_pedestal_lumen_v02","license":"Lumen 原创","status":"IDEALIZED","difficulty":"L1","thumb":"img/thumbs/pedestal.jpg","note":"接触面积为 0，机器人固定在世界坐标系"},
+{"name":"台面与地面","source":"新建","asset":"简单几何","license":"原创（本项目）","status":"NOT_RUN","difficulty":"L1","thumb":"","note":"台面 z=0.6"},
+{"name":"（对照）P1-B 培养箱","source":"对照","asset":"lumen_incubator_P1_B","license":"Lumen 原创","status":"PASS","difficulty":"L2","thumb":"img/thumbs/p1b.jpg","note":"只用于成本和质量对比，不进入场景"}
+],
+"steps":[
+{"no":0,"name":"预静置：门关闭，自由体落定，通过稳定窗口检查","actor":"—","difficulty":"L1","fidelity":"物理"},
+{"no":1,"name":"培养箱外门打开，内玻璃门打开","actor":"培养箱执行器","difficulty":"L2","fidelity":"物理"},
+{"no":2,"name":"观察站抽屉伸出","actor":"观察站执行器","difficulty":"L2","fidelity":"物理"},
+{"no":3,"name":"Panda 伸入第 3 层，偏置宽指夹住板的两个短端（盖自由放在板上）","actor":"Panda","difficulty":"L3","fidelity":"物理"},
+{"no":4,"name":"抬起，带盖退出培养箱，盖不滑落","actor":"Panda","difficulty":"L3","fidelity":"物理"},
+{"no":5,"name":"放到抽屉托面上，确认托住后松爪","actor":"Panda","difficulty":"L3","fidelity":"物理"},
+{"no":6,"name":"Panda 回到停靠位","actor":"Panda","difficulty":"L1","fidelity":"物理"},
+{"no":7,"name":"抽屉收回；内门、外门依次关闭","actor":"执行器","difficulty":"L2","fidelity":"物理"}
+],
+"references":[
+{"title":"NVIDIA SimReady Specification","url":"https://docs.omniverse.nvidia.com/simready/latest/overview/simready-spec.html","license":"NVIDIA 文档；未查到明确的文本许可，只引用概念","usage":"仅参考","note":"SimReady 资产结构与要求的整体框架"},
+{"title":"SimReady Foundation：内容规范与要求","url":"https://nvidia.github.io/simready-foundation/2026.07.1/","license":"NVIDIA 文档，只引用规则思路","usage":"仅参考","note":"每条规则都有 ID、可测试，与本流程验证门的思路一致"},
+{"title":"SimReady Central Library","url":"https://docs.omniverse.nvidia.com/simready/latest/simready-central.html","license":"资产按各自数据集许可（NVIDIA 推荐 CC-BY-4.0，也允许非商用许可）","usage":"仅参考","note":"本项目暂不使用其中资产；以后要用时须逐个核对许可"},
+{"title":"Heracell VIOS 160i 外形尺寸（经销商页面）","url":"https://faust.ch/en/CO2-incubators-Heracell-VIOS-160i-single-chamber/2072","license":"厂商/经销商版权，只引用尺寸数据","usage":"仅参考","note":"637 × 880 × 900 mm，83 kg；官方数据表未取得"},
+{"title":"ANSI SLAS 1-2004 微孔板外形尺寸","url":"https://slas.org/SLAS/assets/File/public/standards/ANSI_SLAS_1-2004_FootprintDimensions.pdf","license":"标准文本版权归 SLAS，只引用尺寸","usage":"仅参考","note":"127.76 × 85.5 mm，公差 ±0.5 mm"},
+{"title":"Franka Hand 规格","url":"https://qviro.com/product/franka-emika/franka-emika-hand/specifications","license":"第三方规格页，只引用数据","usage":"仅参考","note":"行程 80 mm，持续夹持力 70 N；官方 PDF 未取得"},
+{"title":"MuJoCo Menagerie franka_emika_panda","url":"https://github.com/google-deepmind/mujoco_menagerie/tree/main/franka_emika_panda","license":"Apache-2.0","usage":"可作资产","note":"commit 98a70c5，已下载到本地并保留 LICENSE"}
+]
+}
+</script>
+<script>
+const D=JSON.parse(document.getElementById('proposal-data').textContent);
+const tag=s=>`<span class="tag ${s}">${s}</span>`, lv=l=>`<span class="lv ${l}">${l}</span>`;
+document.getElementById('device-table').innerHTML='<table><tr><th></th><th>设备</th><th>来源</th><th>资产</th><th>许可</th><th>状态</th><th>难度</th><th>说明</th></tr>'+
+D.devices.map(d=>`<tr><td>${d.thumb?`<img src="${d.thumb}" alt="">`:'<span class="mute">—</span>'}</td><td><b>${d.name}</b></td><td>${d.source}</td><td><code>${d.asset}</code></td><td>${d.license}</td><td>${tag(d.status)}</td><td>${lv(d.difficulty)}</td><td>${d.note}</td></tr>`).join('')+'</table>';
+document.getElementById('step-table').innerHTML='<table><tr><th>#</th><th>工艺步骤</th><th>执行者</th><th>难度</th><th>保真度</th></tr>'+
+D.steps.map(s=>`<tr><td>${s.no}</td><td>${s.name}</td><td>${s.actor}</td><td>${lv(s.difficulty)}</td><td>${s.fidelity}</td></tr>`).join('')+'</table>';
+document.getElementById('ref-table').innerHTML='<table><tr><th>参考</th><th>许可</th><th>用途</th><th>说明</th></tr>'+
+D.references.map(r=>`<tr><td><a href="${r.url}" target="_blank" rel="noopener">${r.title}</a></td><td>${r.license}</td><td>${r.usage}</td><td>${r.note}</td></tr>`).join('')+'</table>';
+</script>
+</main>
+</body>
+</html>

@@ -1,0 +1,60 @@
+{
+ "tcp_offset_m": 0.1034,
+ "base": [
+  0.25,
+  -1.05,
+  0.5
+ ],
+ "results": {
+  "隔板1 板心 y=-0.18": {
+   "pos_err_mm": 122.58,
+   "rot_err": 0.0406,
+   "reachable": false
+  },
+  "隔板1 板心 y=-0.065": {
+   "pos_err_mm": 1167.32,
+   "rot_err": 0.4377,
+   "reachable": false
+  },
+  "隔板2 板心 y=-0.18": {
+   "pos_err_mm": 40.86,
+   "rot_err": 0.0052,
+   "reachable": false
+  },
+  "隔板2 板心 y=-0.065": {
+   "pos_err_mm": 1163.89,
+   "rot_err": 0.5932,
+   "reachable": false
+  },
+  "隔板3 板心 y=-0.18": {
+   "pos_err_mm": 0.0,
+   "rot_err": 0.0,
+   "reachable": true
+  },
+  "隔板3 板心 y=-0.065": {
+   "pos_err_mm": 161.52,
+   "rot_err": 0.2565,
+   "reachable": false
+  },
+  "隔板4 板心 y=-0.18": {
+   "pos_err_mm": 0.0,
+   "rot_err": 0.0,
+   "reachable": true
+  },
+  "隔板4 板心 y=-0.065": {
+   "pos_err_mm": 1113.38,
+   "rot_err": 0.6445,
+   "reachable": false
+  },
+  "培养箱门外预备位": {
+   "pos_err_mm": 0.0,
+   "rot_err": 0.0,
+   "reachable": true
+  },
+  "观察站抽屉伸出位（板心上方）": {
+   "pos_err_mm": 0.0,
+   "rot_err": 0.0,
+   "reachable": true
+  }
+ }
+}

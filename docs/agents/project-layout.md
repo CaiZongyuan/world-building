@@ -31,6 +31,10 @@ uv run wb gate <项目目录> <阶段>   # 阶段：requirements proposal plan r
 - IDEALIZED 永远不算 PASS。
 - 每个阶段的检查都要同时有正例夹具和负例夹具，放在 `tests/fixtures/`，用 `uv run pytest` 运行。
 
+## 发布方案预览到仓库
+
+`uv run wb publish <项目目录>`：把 `02-proposal/` 复制到仓库的 `proposals/<项目名>/`（ADR-0002 修订）。方案预览每改一次都要重新发布一次，再提交。
+
 ## 同步
 
 ```bash

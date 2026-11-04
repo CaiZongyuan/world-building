@@ -68,3 +68,12 @@ def test_proposal_negative_fails(project, name, failed_check):
     r = run_gate(project(name), "proposal")
     assert r.status == "FAIL"
     assert failed_check in {c.name for c in r.checks if c.status == "FAIL"}
+
+
+def test_publish_copies_proposal(project, tmp_path):
+    from wb.project import publish_proposal
+    p = project("proposal-pass")
+    (p / "02-proposal" / "preview_full.png").write_bytes(b"x")
+    dst = publish_proposal(p, tmp_path / "repo")
+    assert (dst / "index.html").is_file() and (dst / "img" / "a.png").is_file()
+    assert not (dst / "preview_full.png").exists()
