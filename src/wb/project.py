@@ -61,7 +61,11 @@ PUBLISH_EXCLUDE = ("preview_",)  # 前缀匹配：截图类过程产物
 
 
 def publish_proposal(project: Path, repo: Path) -> Path:
-    """方案预览进 GitHub 仓库（ADR-0002 修订）：整目录覆盖复制到 proposals/<项目名>/。"""
+    """方案预览进 GitHub 仓库（ADR-0002 修订）：复制到 proposals/<项目名>/。
+
+    一并发布：01-requirements/preview（范围预览）→ scope/，04-reference/index.html（审批点②）→ review/。
+    整目录重建，所以三类页面每次都从项目重新复制，不会残留旧文件。
+    """
     import shutil
 
     src = project / STAGES["proposal"]
@@ -71,6 +75,9 @@ def publish_proposal(project: Path, repo: Path) -> Path:
     if dst.exists():
         shutil.rmtree(dst)
     copy_tree_plain(src, dst, skip=lambda rel: rel.name.startswith(PUBLISH_EXCLUDE))
+    scope = project / STAGES["requirements"] / "preview"
+    if (scope / "index.html").is_file():  # 范围预览页一并发布到 scope/
+        copy_tree_plain(scope, dst / "scope", skip=lambda rel: rel.name.startswith(PUBLISH_EXCLUDE))
     review = project / STAGES["reference"] / "index.html"
     if review.is_file():  # 审批点②页面一并发布到 review/
         keep = {"index.html", "assets", "board", "load_path.svg"}

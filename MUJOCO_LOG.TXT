@@ -1720,3 +1720,6 @@ integrator: parent has 0 (default), child has 3, keeping parent value
 WARNING Thu Nov  5 00:02:17 2026: Attach conflict when attaching 'panda', policy is 'warning'
 integrator: parent has 0 (default), child has 3, keeping parent value
 
+WARNING Thu Nov  5 00:07:53 2026: Attach conflict when attaching 'panda', policy is 'warning'
+integrator: parent has 0 (default), child has 3, keeping parent value
+
