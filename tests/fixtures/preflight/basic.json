@@ -1,0 +1,15 @@
+{
+ "clearance": 0.005,
+ "robot": {"mjcf": "/mnt/d/Projects/Robots/assets/third_party/menagerie_franka_emika_panda/panda.xml",
+           "base": [0, 0, 0.5], "yaw": 0,
+           "tool": {"tcp_in_hand": [0, 0, 0.1034], "opening_range": [0.0, 0.08]}},
+ "static": [{"name": "table", "pos": [0.55, 0, 0.45], "size": [0.2, 0.3, 0.05]},
+            {"name": "pedestal", "pos": [0, 0, 0.25], "size": [0.12, 0.12, 0.25]}],
+ "movers": [{"name": "door", "joint": {"type": "hinge", "anchor": [0.75, -0.35, 0.6], "axis": [0, 0, -1], "range": [0, 1.6]},
+             "boxes": [{"pos": [-0.2, 0, 0], "size": [0.2, 0.01, 0.2]}]}],
+ "workpieces": [{"name": "tube", "grip_width": 0.017}, {"name": "plate", "grip_width": 0.0855}],
+ "poses": [{"name": "pick_table", "pos": [0.5, 0.0, 0.56], "approach": [0, 0, -1], "opening_axis": [0, 1, 0], "standoff": 0.08},
+           {"name": "inside_table", "pos": [0.55, 0.0, 0.42], "approach": [0, 0, -1], "opening_axis": [0, 1, 0]},
+           {"name": "far", "pos": [1.6, 0.0, 0.6], "approach": [0, 0, -1], "opening_axis": [0, 1, 0]}],
+ "transitions": [["pick_table", "pick_table"]]
+}

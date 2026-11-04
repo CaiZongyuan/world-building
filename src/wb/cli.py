@@ -1,4 +1,4 @@
-"""命令行：`wb gate <项目目录> <阶段>`、`wb new <项目目录>`。"""
+"""命令行：`wb gate`、`wb new`、`wb publish`、`wb review`、`wb preflight`。"""
 
 from __future__ import annotations
 
@@ -26,7 +26,19 @@ def main(argv: list[str] | None = None) -> int:
     pub.add_argument("--repo", type=Path, default=Path(__file__).resolve().parents[2])
     rv = sub.add_parser("review", help="生成审批点②页面 04-reference/index.html")
     rv.add_argument("project", type=Path)
+    pf = sub.add_parser("preflight", help="运动学预演：方盒代理 + IK + 扫掠（输入 preflight.json）")
+    pf.add_argument("spec", type=Path)
+    pf.add_argument("--out", type=Path, default=None)
     a = p.parse_args(argv)
+
+    if a.cmd == "preflight":
+        from wb.preflight import run as run_preflight
+        rep = run_preflight(a.spec, a.out)
+        for sec in ("gripper", "poses", "movers", "transitions"):
+            for rec in rep[sec]:
+                print(f"  {'✅' if rec['ok'] else '❌'} {rec['id']}" + (f" — {rec['detail']}" if rec.get("detail") else ""))
+        print(f"{ICON[rep['status']]} preflight: {rep['status']}（{rep['summary']['total']} 项，失败 {len(rep['summary']['failed'])}）")
+        return 0 if rep["status"] == "PASS" else 1
 
     if a.cmd == "review":
         from wb.review import build_review_page
