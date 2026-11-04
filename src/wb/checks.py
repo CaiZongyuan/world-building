@@ -272,11 +272,10 @@ def check_modelling(stage_dir: Path) -> list[Check]:
 
 
 # ---------------------------------------------------------------- 仿真
-NEGATIVES = {  # 结果文件 → (说明, 期望 FAIL 的门限之一, 附加判据)
-    "no_support": ("N1 去托面", ("S7",), lambda m: (m.get("N1_plate_drop_after_release") or 0) > 0.005),
-    "overinsert": ("N2 过插", ("S3",), lambda m: True),
-    "lid_frictionless": ("N3 盖零摩擦", ("S5", "S6"), lambda m: True),
-}
+# 负例清单写在各项目的 03-plan/thresholds.json → simulation.negatives，每项：
+#   {"id": "N1", "label": "去托面", "variant": "no_support", "expect_fail": ["S7"],
+#    "metric_gt": {"N1_plate_drop_after_release": 0.005}}   # metric_gt 可省略
+# 名义流程要检查的门限编号写在 simulation.nominal_gates；缺省为 S1–S13。
 
 
 @stage_check("simulation")
@@ -289,19 +288,25 @@ def check_simulation(stage_dir: Path) -> list[Check]:
     if not nom.is_file():
         return [Check("名义流程结果", NOT_RUN, "缺少 results/nominal.json")]
     r = json.loads(nom.read_text(encoding="utf-8"))
+    sim_th = _thresholds(stage_dir).get("simulation", {})
     bad = [k for k, v in r["gates"].items() if v != "PASS"]
-    expected = {f"S{i}" for i in range(1, 14)}
+    expected = set(sim_th.get("nominal_gates") or [f"S{i}" for i in range(1, 14)])
     missing = sorted(expected - set(r["gates"]))
-    checks.append(Check("名义流程 S1–S13", FAIL if bad or missing else PASS,
+    checks.append(Check(f"名义流程 {len(expected)} 项门限", FAIL if bad or missing else PASS,
                         ("FAIL：" + ", ".join(bad) if bad else "") + (" 缺：" + ", ".join(missing) if missing else ""),
                         [f"06-simulation/results/nominal.json"]))
-    for name, (label, gates, extra) in NEGATIVES.items():
+    negatives = sim_th.get("negatives") or []
+    if not negatives:
+        checks.append(Check("负例清单", FAIL, "thresholds.json 的 simulation.negatives 为空"))
+    for neg in negatives:
+        name, label, gates = neg["variant"], f"{neg['id']} {neg['label']}", neg["expect_fail"]
         f = res / f"{name}.json"
         if not f.is_file():
             checks.append(Check(f"负例 {label}", NOT_RUN, f"缺少 results/{name}.json"))
             continue
         n = json.loads(f.read_text(encoding="utf-8"))
-        tripped = any(n["gates"].get(g) == "FAIL" for g in gates) and extra(n["metrics"])
+        tripped = any(n["gates"].get(g) == "FAIL" for g in gates) and all(
+            (n["metrics"].get(k) or 0) > v for k, v in (neg.get("metric_gt") or {}).items())
         checks.append(Check(f"负例 {label} 按预期判 FAIL", PASS if tripped else FAIL,
                             "" if tripped else f"未触发：{', '.join(f'{g}={n['gates'].get(g)}' for g in gates)}",
                             [f"06-simulation/results/{name}.json"]))

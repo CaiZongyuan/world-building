@@ -1288,3 +1288,333 @@ iterations: parent has 60 (default), child has 50, keeping parent value
 njmax: parent has -1 (default), child has 6000, keeping parent value
 nconmax: parent has -1 (default), child has 3000, keeping parent value
 
+WARNING Wed Nov  4 23:13:43 2026: Attach conflict when attaching 'lumen_incubator_slice01', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+
+WARNING Wed Nov  4 23:13:43 2026: Attaching a spec with an empty prefix may prevent the model from being saved correctly.
+
+WARNING Wed Nov  4 23:13:46 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:13:46 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:13:46 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:13:46 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:15:34 2026: Attach conflict when attaching 'lumen_incubator_slice01', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+
+WARNING Wed Nov  4 23:15:34 2026: Attaching a spec with an empty prefix may prevent the model from being saved correctly.
+
+WARNING Wed Nov  4 23:15:34 2026: Attach conflict when attaching 'lumen_incubator_slice01', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+
+WARNING Wed Nov  4 23:15:34 2026: Attaching a spec with an empty prefix may prevent the model from being saved correctly.
+
+WARNING Wed Nov  4 23:15:34 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:15:34 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:15:34 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:15:34 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:15:34 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:15:34 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:15:34 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:15:34 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:17:22 2026: Attach conflict when attaching 'lumen_incubator_slice01', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+
+WARNING Wed Nov  4 23:17:22 2026: Attaching a spec with an empty prefix may prevent the model from being saved correctly.
+
+WARNING Wed Nov  4 23:17:24 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:17:24 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:17:24 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:17:24 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:20:01 2026: Attach conflict when attaching 'lumen_incubator_slice01', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+
+WARNING Wed Nov  4 23:20:01 2026: Attaching a spec with an empty prefix may prevent the model from being saved correctly.
+
+WARNING Wed Nov  4 23:20:01 2026: Attach conflict when attaching 'lumen_incubator_slice01', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+
+WARNING Wed Nov  4 23:20:01 2026: Attaching a spec with an empty prefix may prevent the model from being saved correctly.
+
+WARNING Wed Nov  4 23:20:01 2026: Attach conflict when attaching 'lumen_incubator_slice01', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+
+WARNING Wed Nov  4 23:20:01 2026: Attaching a spec with an empty prefix may prevent the model from being saved correctly.
+
+WARNING Wed Nov  4 23:20:01 2026: Attach conflict when attaching 'lumen_incubator_slice01', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+
+WARNING Wed Nov  4 23:20:01 2026: Attaching a spec with an empty prefix may prevent the model from being saved correctly.
+
+WARNING Wed Nov  4 23:20:01 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:20:01 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:20:01 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:20:01 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:20:01 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:20:01 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:20:01 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:20:01 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:20:01 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:20:01 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:20:01 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:20:01 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:20:01 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:20:01 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:20:01 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:20:01 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:22:00 2026: Attach conflict when attaching 'lumen_incubator_slice01', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+
+WARNING Wed Nov  4 23:22:00 2026: Attaching a spec with an empty prefix may prevent the model from being saved correctly.
+
+WARNING Wed Nov  4 23:22:02 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:22:02 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:22:02 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:22:02 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:22:20 2026: Attach conflict when attaching 'lumen_incubator_slice01', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+
+WARNING Wed Nov  4 23:22:20 2026: Attaching a spec with an empty prefix may prevent the model from being saved correctly.
+
+WARNING Wed Nov  4 23:22:22 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:22:22 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:22:22 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:22:22 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:22:26 2026: Attach conflict when attaching 'lumen_incubator_slice01', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+
+WARNING Wed Nov  4 23:22:26 2026: Attaching a spec with an empty prefix may prevent the model from being saved correctly.
+
+WARNING Wed Nov  4 23:22:28 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:22:28 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:22:28 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+
+WARNING Wed Nov  4 23:22:28 2026: Attach conflict when attaching 'original_plate_observation_station_P0', policy is 'warning'
+timestep: parent has 0.0005 (default), child has 0.001, keeping parent value
+iterations: parent has 60 (default), child has 50, keeping parent value
+njmax: parent has -1 (default), child has 6000, keeping parent value
+nconmax: parent has -1 (default), child has 3000, keeping parent value
+

@@ -36,7 +36,7 @@ description: 场景流程：把实验室或工作站的需求一路做到可仿�
 做法见 `docs/lessons/02-proposal-preview.md`。
 
 ### 3 plan → `03-plan/plan.md` + `thresholds.json`
-按阶段列出可勾选的任务。冻结带编号的门限（S/M/R/V）和负例（N），并同时写进 `thresholds.json`，验证门只读这个文件。每个负例都要先确认它针对的危险在物理上确实可能发生。做法见 `docs/lessons/03-plan.md`。
+按阶段列出可勾选的任务。冻结带编号的门限（S/M/R/V）和负例（N），并同时写进 `thresholds.json`，验证门只读这个文件。负例清单写进 `thresholds.json` 的 `simulation.negatives`。每个负例都要先做一次危险探针（用独立小模型扫参数），确认它针对的危险在操作范围内确实会发生。做法见 `docs/lessons/03-plan.md`。
 
 ### 4 参考图 → `04-reference/`（审批点②，连同 plan 一起审）
 参考图只冻结外观风格；尺寸以 `dimensions.md` 为准，每项都标明来源类别。另画一张载荷链 `load_path.svg`。用 `uv run wb review <项目>` 生成审批页。做法见 `docs/lessons/04-reference-images.md`。
