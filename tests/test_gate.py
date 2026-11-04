@@ -26,8 +26,8 @@ def test_missing_stage_is_not_run(project):
 
 def test_unimplemented_stage_is_not_run(project):
     p = project("req-pass")
-    (p / "06-simulation").mkdir()
-    assert run_gate(p, "simulation").status == "NOT_RUN"
+    (p / "07-render").mkdir()
+    assert run_gate(p, "render").status == "NOT_RUN"
 
 
 def test_requirements_pass_with_evidence(project):

@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from wb.gate import FAIL, PASS, Check, stage_check
+from wb.gate import BLOCKED, FAIL, NOT_RUN, PASS, Check, stage_check
 
 REQUIREMENT_SECTIONS = ["目标", "不做什么", "工艺步骤", "设备", "保真度", "算力预算"]
 
@@ -268,4 +268,85 @@ def check_modelling(stage_dir: Path) -> list[Check]:
 
     prev = sorted((stage_dir / "preview").glob("*.webp"))
     checks.append(Check("预览渲染（证据）", PASS if prev else FAIL, f"{len(prev)} 张", [f"05-modelling/preview/{p.name}" for p in prev]))
+    return checks
+
+
+# ---------------------------------------------------------------- 仿真
+NEGATIVES = {  # 结果文件 → (说明, 期望 FAIL 的门限之一, 附加判据)
+    "no_support": ("N1 去托面", ("S7",), lambda m: (m.get("N1_plate_drop_after_release") or 0) > 0.005),
+    "overinsert": ("N2 过插", ("S3",), lambda m: True),
+    "lid_frictionless": ("N3 盖零摩擦", ("S5", "S6"), lambda m: True),
+}
+
+
+@stage_check("simulation")
+def check_simulation(stage_dir: Path) -> list[Check]:
+    import json
+
+    res = stage_dir / "results"
+    checks: list[Check] = []
+    nom = res / "nominal.json"
+    if not nom.is_file():
+        return [Check("名义流程结果", NOT_RUN, "缺少 results/nominal.json")]
+    r = json.loads(nom.read_text(encoding="utf-8"))
+    bad = [k for k, v in r["gates"].items() if v != "PASS"]
+    expected = {f"S{i}" for i in range(1, 14)}
+    missing = sorted(expected - set(r["gates"]))
+    checks.append(Check("名义流程 S1–S13", FAIL if bad or missing else PASS,
+                        ("FAIL：" + ", ".join(bad) if bad else "") + (" 缺：" + ", ".join(missing) if missing else ""),
+                        [f"06-simulation/results/nominal.json"]))
+    for name, (label, gates, extra) in NEGATIVES.items():
+        f = res / f"{name}.json"
+        if not f.is_file():
+            checks.append(Check(f"负例 {label}", NOT_RUN, f"缺少 results/{name}.json"))
+            continue
+        n = json.loads(f.read_text(encoding="utf-8"))
+        tripped = any(n["gates"].get(g) == "FAIL" for g in gates) and extra(n["metrics"])
+        checks.append(Check(f"负例 {label} 按预期判 FAIL", PASS if tripped else FAIL,
+                            "" if tripped else f"未触发：{', '.join(f'{g}={n['gates'].get(g)}' for g in gates)}",
+                            [f"06-simulation/results/{name}.json"]))
+    st = stage_dir / "states_30fps.npz"
+    checks.append(Check("渲染用位姿记录", PASS if st.is_file() else FAIL, "" if st.is_file() else "缺少 states_30fps.npz",
+                        ["06-simulation/states_30fps.npz"] if st.is_file() else []))
+    return checks
+
+
+# ---------------------------------------------------------------- 渲染
+@stage_check("render")
+def check_render(stage_dir: Path) -> list[Check]:
+    import json
+    import shutil
+    import subprocess
+
+    th = _thresholds(stage_dir).get("render", {"V2_fps": 30, "V3_pose_tol": 1e-5})
+    rep_f = stage_dir / "binding_report.json"
+    if not rep_f.is_file():
+        return [Check("位姿绑定报告", NOT_RUN, "缺少 binding_report.json")]
+    rep = json.loads(rep_f.read_text(encoding="utf-8"))
+    ev = ["07-render/binding_report.json"]
+    checks = [Check("V1 场景无碰撞代理", FAIL if rep["v1_collision_objects_in_scene"] else PASS,
+                    ", ".join(rep["v1_collision_objects_in_scene"][:5]), ev)]
+    expect = round(rep["sim_duration_s"] * th["V2_fps"]) + 1
+    frames = sorted((stage_dir / "frames").glob("frame_*.png")) + sorted((stage_dir / "frames").glob("frame_*.webp"))
+    ok = rep["frames"] == expect and rep["fps"] == th["V2_fps"]
+    checks.append(Check("V2 帧数 = 仿真时长 × 30（不加速、不跳帧）", PASS if ok else FAIL,
+                        f"绑定 {rep['frames']} 帧，期望 {expect}；已渲染 {len(frames)} 帧", ev))
+    ok = rep["v3_max_pos_err_m"] <= th["V3_pose_tol"] and rep["v3_max_rot_err_rad"] <= 1e-4
+    checks.append(Check("V3 抽检位姿与仿真一致", PASS if ok else FAIL,
+                        f"位置 {rep['v3_max_pos_err_m']:.2e} m，姿态 {rep['v3_max_rot_err_rad']:.2e} rad", ev))
+    mp4 = stage_dir / "film.mp4"
+    if not mp4.is_file():
+        checks.append(Check("V4 成片可解码且时长一致", NOT_RUN, "缺少 film.mp4"))
+    elif not shutil.which("ffprobe"):
+        checks.append(Check("V4 成片可解码且时长一致", BLOCKED, "ffprobe 不可用"))
+    else:
+        out = subprocess.run(["ffprobe", "-v", "error", "-count_frames", "-select_streams", "v:0", "-show_entries",
+                              "stream=nb_read_frames,r_frame_rate", "-of", "json", str(mp4)], capture_output=True, text=True)
+        s = json.loads(out.stdout or "{}").get("streams", [{}])[0]
+        n = int(s.get("nb_read_frames", 0))
+        num, den = map(int, s.get("r_frame_rate", "0/1").split("/"))
+        dur = n / (num / den) if num else 0
+        ok = out.returncode == 0 and n == expect and abs(dur - expect / th["V2_fps"]) <= 1 / th["V2_fps"]
+        checks.append(Check("V4 成片可解码且时长一致", PASS if ok else FAIL, f"{n} 帧，{dur:.3f} s",
+                            ["07-render/film.mp4"]))
     return checks
