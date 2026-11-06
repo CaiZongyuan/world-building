@@ -17,5 +17,6 @@
 | `04-reference-images.md` | 参考图 | 初稿（薄切片 01） |
 | `05-modelling.md` | 建模 | 初稿（薄切片 01） |
 | `06-simulation.md` | 仿真 | 初稿（薄切片 01）· 问题最大的阶段 |
-| `07-pose-binding-render.md` | 位姿绑定与渲染 | 完成（薄切片 01） |
+| `07-pose-binding-render.md` | 位姿绑定与渲染 | 完成（薄切片 01 + 全流程实验室） |
 | `08-retro-slice01.md` | 汇总复盘（薄切片 01） | 完成 |
+| `09-pixal3d-colab-scene-dressing.md` | Colab 3D 生成陈设与 Blender 修模合入 | 完成（全流程实验室） |

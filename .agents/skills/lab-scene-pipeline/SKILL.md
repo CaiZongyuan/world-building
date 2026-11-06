@@ -48,9 +48,10 @@ description: 场景流程：把实验室或工作站的需求一路做到可仿�
 ### 5 建模 → `05-modelling/`
 1. `design.py` 是唯一的参数源，Blender 构建和 MJCF 构建都从它读取。
 2. 命名约定：`ROOT_` / `VIS_` / `COL_`；导出 GLB 时按白名单只选视觉对象，导出后再读回检查。
-3. 预览渲染只作为验证证据，不需要审批。
+3. **参数化与 AI 3D 生成分工**：核心交互设备及大件规整箱体（冰箱、透明玻璃门试剂柜、实验台架）用 Blender 参数化建模（玻璃柜用参数化外壳+透射玻璃门，或冰箱用规整几何体+外部贴图）；非接触异形小件与柜内陈设（排风波纹管与集气罩、带盘绕电线的电源盒、墙面插座插头、柜内试剂瓶、废料桶）用 `colab-operator` 在 Colab L4 批量运行 Pixal3D 生成 `.glb`，经 Blender `2 mm` 空间容差去碎块与最小包围盒自动调平后作为 `VIS_` 合入。
+4. 预览渲染只作为验证证据，不需要审批。图片一律用 WebP。
 
-做法见 `docs/lessons/05-modelling.md`。
+做法见 `docs/lessons/05-modelling.md` 与 `docs/lessons/09-pixal3d-colab-scene-dressing.md`。
 
 ### 6 仿真 → `06-simulation/`
 1. 用 MjSpec 装配场景。

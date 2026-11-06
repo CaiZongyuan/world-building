@@ -49,7 +49,8 @@ HF 不保存空目录。所以刚拉下来的项目缺少某个阶段目录很�
 
 ## 外部工具（从 WSL 调用）
 
-- **Blender 5.4**：`/mnt/d/Environment/blender-5.4.0/blender.exe -b --factory-startup --python <脚本>`。路径参数必须先用 `wslpath -w` 转成 Windows 路径。每次启动约 7 秒，多个操作应合并到一个脚本里执行。
+- **Blender 5.4**：`cd /mnt/d/... && /mnt/d/Environment/blender-5.4.0/blender.exe -b --factory-startup --python <脚本> < /dev/null`。路径参数必须先用 `wslpath -w` 转成 Windows 绝对路径；在 `/mnt/d` 原生工作目录下启动并重定向 `< /dev/null` 防止 WSL2 Interop 阻塞。每次启动约 7 秒，多个操作应合并到一个脚本里执行。
+- **Colab GPU（3D 资产批量生成）**：使用全局 `colab-operator` skill（`colab` CLI），做法与避坑见 `docs/lessons/09-pixal3d-colab-scene-dressing.md`。
 - **MuJoCo**：`uv run --extra sim python ...`，CPU 运行。
 - **imagegen**：见 `image-generation.md`。
 

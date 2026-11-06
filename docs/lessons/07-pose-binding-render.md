@@ -62,6 +62,7 @@
 - **Blender 5 的分层动作**：`action.fcurves` 已经不存在，要经 `action.layers → strips → channelbags → fcurves` 取。用 `getattr(action, "fcurves", [])` 会静默拿到空列表，插值没改成 CONSTANT。相机分段于是在两个机位之间渐变；刚体每帧都有关键帧，所以不受影响。改法：按分层 API 取 fcurve，并在每段末帧再压一个同值关键帧。
 - **传给 Windows 版 Blender 的输出目录要用绝对路径**：`wslpath -w` 对相对路径原样返回，Blender 的工作目录是 `C:\`，帧就写到了 `C:\<目录名>`，项目目录里看不到。之前"渲了却没有文件"就是这个原因。
 - **分期的状态文件**：`build_render_scene.py` 的第二个参数可以指定状态文件。状态文件里没有的刚体整棵隐藏；后加的板复制观察站自带的板、盖视觉。
+- **非接触场景陈设（Scene Dressing）合入**：不参与碰撞的丰富件（墙面线槽插座、台下 UPS 电源盒、顶部波纹管集气罩、玻璃柜内试剂瓶）以 `VIS_pixal3d__*` / `VIS_dress__*` 命名挂入独立 Collection，不在 `states_30fps.npz` 中打关键帧；大件规整箱体（冰箱、透明玻璃门试剂柜）用 Blender 参数化外壳 + 贴图或透明玻璃门，内部摆放生成的 3D 小件。WSL 调用 Windows `blender.exe` 须先 `cd /mnt/d/...` 并加 `< /dev/null` 防止管道挂起。详见 `docs/lessons/09-pixal3d-colab-scene-dressing.md`。
 
 ## 阶段日志摘要
 
