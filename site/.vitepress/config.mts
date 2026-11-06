@@ -92,6 +92,7 @@ export default defineConfig({
         items: [
           { text: '薄切片 01：开箱取板', link: '/cases/slice-01' },
           { text: '全流程实验室：14 步传代', link: '/cases/full-lab' },
+          { text: 'Colab 3D 生成与 Blender 修模', link: '/cases/pixal3d-dressing' },
         ],
       },
     ],

@@ -44,7 +44,9 @@ description: 一个参数源 design.py 生成两份模型：Blender 视觉模型
      2. **双轨并行初始化（~65 s）**：开机上传后，前台 `uv venv --python 3.10` 安装预编译 CUDA wheels 并打补丁（`~52 s`），后台同时开启 `HF_HUB_ENABLE_HF_TRANSFER=1` 8 线程并发预取 16.7 GB 模型权重（`~60 s`），将原本 `234 s` 的串行冷启动压缩至 `~65 s`；
      3. **单进程四步批处理（~129 s/个）**：批量 `BiRefNet` 抠图即卸 $\rightarrow$ 批量 `MoGe-2` 外参估计即卸 $\rightarrow$ 共享单份 `DINOv3+NAF` 跑 `1024_cascade` 扩散 $\rightarrow$ 子进程隔离 `CuMesh` 烘焙并打单包 `/content/outputs.tar.gz`；
      4. **Gate A 秒级校验与立即关机（~5 s）**：拉回 `outputs.tar.gz` 后，先用本地脚本在 `< 0.1 s` 内核对全部 `.glb` 的 glTF 2.0 魔数头与面数，**验证通过立即执行 `colab stop` 并确认会话清零**，绝不挂着远程 GPU 等待本地渲染；
-     5. **Gate B 本地修模合入（0 CU）**：在本地 Blender 5.4 中做 `2 mm` 空间容差去碎块和最小包围盒体积自动调平，作为 `VIS_` 对象合入。详见 `docs/lessons/09-pixal3d-colab-scene-dressing.md`。
+     5. **Gate B 本地修模合入（0 CU）**：在本地 Blender 5.4 中做 `2 mm` 空间容差去碎块（跨 UV 接缝焊合重合顶点，仅剔除 `< 2%` 的外部悬空碎块）和最小包围盒体积（Min-Volume OBB）自动调平（消除单图 `11°–29°` 俯视倾角），作为 `VIS_pixal3d__*` 对象合入。完整流程、双轨脚本与 Blender 四步修模源码见案例页 **[Colab 3D 生成与 Blender 修模](/cases/pixal3d-dressing)**（对应 `docs/lessons/09-pixal3d-colab-scene-dressing.md`）。
+
+<figure class="wb-figure"><img :src="$withBase('/img/pixal3d/grid_9models.webp')" alt="Colab Pixal3D 9 组生成模型修模预览" /><figcaption>Colab L4 批量生成的 9 组 3D 模型经 Blender 5.4 自动去碎块与调平后的预览对比。完整评测与源码见<a :href="$withBase('/cases/pixal3d-dressing')">Colab 3D 生成与 Blender 修模</a>。</figcaption></figure>
 
 调用方式（从 WSL）：
 
