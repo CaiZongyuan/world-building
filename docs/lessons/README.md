@@ -2,7 +2,9 @@
 
 流程每个阶段一份，阶段复盘后更新。由这里提炼出的 skill：`.agents/skills/lab-scene-pipeline`（见 `docs/adr/0001`）。
 
-学习页（HTML，图文版，适合通读）：`slice-01/index.html`，汇总薄切片 01 每一步做了什么、问题出在哪、固定下来的做法，附自测题。
+**入门先读教程站点**：https://caizongyuan.github.io/world-building/（源码 `site/`）。七个阶段怎么接力、物理建模与物理测试、怎么用 skill，附 7 个可在浏览器里运行 MuJoCo 的实验台。
+- 实验台定义 `site/labs/labs.json` 由网页、`runner.py`（生成预计算回放 `site/labs/fallback/`）、`play.py`（在本机 MuJoCo 窗口里播放）共用；改了定义要重跑 `runner.py`。
+- 两个项目各自的学习页：`slice-01/index.html`（薄切片 01）、`full-lab/index.html`（全流程实验室的物理验证）。
 
 每份阶段记录的固定结构：这一步做什么 → 输入 / 产物 / 完成判据 → 工具与调用方式 → 标准做法 → 踩过的坑（附证据）→ 阶段日志摘要。
 
