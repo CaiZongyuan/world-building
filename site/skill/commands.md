@@ -65,7 +65,7 @@ HF 不保存空目录，所以刚拉下来的项目缺某个阶段目录很正�
 | 工具 | 调用方式 | 注意 |
 |---|---|---|
 | Blender 5.4 | `cd /mnt/d/... && /mnt/d/Environment/blender-5.4.0/blender.exe -b --factory-startup --python <脚本> -- <参数> < /dev/null` | 路径参数先用 `wslpath -w` 转成 Windows 绝对路径；在 `/mnt/d` 下启动并加 `< /dev/null` 防止 WSL2 管道阻塞；每次启动约 7 秒，操作合并到一个脚本里 |
-| Colab GPU | `colab exec -s <name> ...`（`colab-operator` skill） | 单进程批量跑完所有 3D 生成后打包下载，立即 `colab stop -s <name>` |
+| Colab GPU | `colab exec -s <name> ...`（`colab-operator` skill） | 开机前打包全部 `.webp` 与脚本并设 `trap 'colab stop ...' EXIT`；开机后 `uv venv` 与 `HF_HUB_ENABLE_HF_TRANSFER=1` 双轨并行初始化（`~65 s`）；单进程批处理后下载 `outputs.tar.gz`，本地 `< 0.1 s` 校验 GLB 二进制头通过后**立即 `colab stop` 并用 `colab sessions` 确认清零**，再跑本地 Blender |
 | MuJoCo | `uv run --extra sim python ...` | CPU 运行 |
 | imagegen | 见仓库 `docs/agents/image-generation.md` | 生成后立即转 WebP |
 

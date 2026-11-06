@@ -39,7 +39,12 @@ description: 一个参数源 design.py 生成两份模型：Blender 视觉模型
 5. **门限放在 `03-plan/thresholds.json`** 的 modelling 段，验证门只读它。
 6. **参数化建模与 AI 3D 生成（Pixal3D）明确分工**：
    - **大件规整箱体与透明门柜体**（立式冰箱、双门玻璃试剂柜、实验台架）一律用 Blender 参数化建模：透明柜体用 Blender 做外壳、隔板与透射玻璃门，里面的试剂瓶等小东西逐个用 3D 模型生成后摆进去；或用 Blender 做规整冰箱几何体加外面贴图。直接用单图 3D 扩散生成整台大柜子会导致大平面边缘发肉、烘焙阴影显脏，还会把透明玻璃门封死成不透明白门。
-   - **非接触异形机电小件**（带盘绕电线的台下 UPS 电源盒、蓝色波纹排风管与金属喉箍、墙面插座插头、散装试剂瓶、废料桶）在 Colab L4 上批量运行 `Pixal3D` 生成 `.glb`，经 Blender `2 mm` 空间容差去碎块和最小包围盒体积自动调平后作为 `VIS_` 对象合入。详见 `docs/lessons/09-pixal3d-colab-scene-dressing.md`。
+   - **非接触异形机电小件**（带盘绕电线的台下 UPS 电源盒、蓝色波纹排风管与金属喉箍、墙面插座插头、散装试剂瓶、废料桶）在 Colab L4 上按**五阶段零浪费流程**批量运行 `Pixal3D` 生成 `.glb`：
+     1. **开机前本地预检（0 CU）**：备齐全部 `.webp` 净图与批处理脚本并打成单包 `colab_payload.tar.gz`，检查 `colab sessions` 无残留会话，主控脚本挂载 `trap 'colab stop ...' EXIT`；
+     2. **双轨并行初始化（~65 s）**：开机上传后，前台 `uv venv --python 3.10` 安装预编译 CUDA wheels 并打补丁（`~52 s`），后台同时开启 `HF_HUB_ENABLE_HF_TRANSFER=1` 8 线程并发预取 16.7 GB 模型权重（`~60 s`），将原本 `234 s` 的串行冷启动压缩至 `~65 s`；
+     3. **单进程四步批处理（~129 s/个）**：批量 `BiRefNet` 抠图即卸 $\rightarrow$ 批量 `MoGe-2` 外参估计即卸 $\rightarrow$ 共享单份 `DINOv3+NAF` 跑 `1024_cascade` 扩散 $\rightarrow$ 子进程隔离 `CuMesh` 烘焙并打单包 `/content/outputs.tar.gz`；
+     4. **Gate A 秒级校验与立即关机（~5 s）**：拉回 `outputs.tar.gz` 后，先用本地脚本在 `< 0.1 s` 内核对全部 `.glb` 的 glTF 2.0 魔数头与面数，**验证通过立即执行 `colab stop` 并确认会话清零**，绝不挂着远程 GPU 等待本地渲染；
+     5. **Gate B 本地修模合入（0 CU）**：在本地 Blender 5.4 中做 `2 mm` 空间容差去碎块和最小包围盒体积自动调平，作为 `VIS_` 对象合入。详见 `docs/lessons/09-pixal3d-colab-scene-dressing.md`。
 
 调用方式（从 WSL）：
 

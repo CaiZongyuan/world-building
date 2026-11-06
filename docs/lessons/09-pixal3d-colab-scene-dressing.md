@@ -45,10 +45,17 @@
 - **反例（实景直接裁剪 `crop_fridge_overview`）**：从全局实景图直接裁出的局部图带有前景遮挡（离心机盖挡住左下角）和邻物粘连（右侧紧挨玻璃柜）。`BiRefNet` 会把隔壁玻璃搁板误判为前景粘在模型侧面，遮挡处在体素扩散中坍缩成黑洞，且广角透视（`FOV = 40.2°`）导致模型严重后仰变形。
 - **正例（干净孤立 3/4 单品图）**：先生成或拍摄无遮挡、浅灰底、焦距平缓（`FOV ≈ 22°–27°`）的单物体 3/4 视图（保存为 `.webp`），再送入 Pixal3D，四面闭合完整率接近 100%。
 
-### 3. Colab 批量推理标准流程（单进程常驻）
+### 3. Colab 零浪费五阶段全链路流程（从开机前预检到验证后秒级关停）
 
-1. **一机多图批处理**：Pixal3D 冷启动加载 15 GB safetensors 权重需 `182 s`，比生成单个 `1024_cascade` 模型（平均 `129 s`）更久。必须用单进程批量脚本一次性加载模型，按 **「全部图片 BiRefNet 抠图 → 全部图片 MoGe-2 相机外参估计（跑完即卸载释放显存）→ 逐张 3D 扩散 + 子进程 GLB 烘焙」** 顺序执行，吞吐效率提升 $2.4\times$。
-2. **分辨率选择**：台下电源盒、插座、试剂瓶、集气罩一律用 `1024_cascade`（峰值显存 `12.9 GB`，单模型 `75–150 s`，约 `0.07 CU`/个）；只有确需高锐度百叶窗/凹槽细节的主体部件才开 `1536_cascade`（峰值显存 `18.7 GB`，耗时 `~208 s`）。
+> **算力复盘**：首次实验共消耗 **`3.37 CU`（约 104 分钟 L4 租期）**，但 9 个模型的稳态推理仅占 **`19.7 min`（`0.64 CU`）**——高达 **81%（`2.73 CU`）** 的算力浪费在「开机后才生成/挑选参考图、多次零散上传、串行单线程拉取 16.7 GB 权重（`182 s`）、现场排障改代码、以及本地跑 Blender 时未及时关停远端 GPU」。将全流程固化为以下 **五阶段 SOP** 后，同等 9 模型批处理总租期可从 `104 min` 压缩至 **`~21.5 min`（`~0.70 CU`，节省 79% 算力）**：
+
+| 阶段 | 执行位置与计费状态 | 核心动作 | 耗时（实测 / 优化后） | 关键防呆与加速手段 |
+|---|---|---|---|---|
+| **Stage 0：开机前本地预检（Pre-Flight）** | 本地 WSL（**`0 CU`**） | ① 按分工筛除大平板/透明门柜体，只留异形小件；<br/>② 准备好全部 `.webp` 净图（浅灰底、无遮挡、3/4 视角、`FOV 20°–28°`）；<br/>③ 跑 `colab whoami` 与 `colab sessions` 确认凭证有效且无残留实例；<br/>④ 将 `inputs/*.webp`、补丁与批处理脚本打成**单包 `colab_payload.tar.gz`** | 本地准备完成再开机（**GPU 计费 `0 s`**） | **严禁开机后再生成参考图或写脚本**；单包上传替代十余次零散 `colab upload` |
+| **Stage 1：开机 + 环境与权重双轨并行初始化** | Colab L4（**`1.94 CU/hr`**） | ① 本地先挂载 `trap 'colab stop -s pixal3d' EXIT INT TERM` 防异常泄漏；<br/>② `COLAB_CLI_RETRIES=1` 秒级申请 L4 并单次上传 `colab_payload.tar.gz`（`~12 s`）；<br/>③ 运行 `setup_and_prefetch.sh` **双轨并行**：<br/>• **轨道 A（CPU/磁盘，`~52 s`）**：`git clone` + `uv venv --python 3.10` + 预编译 `cp310` CUDA wheels + `patch_pixal3d.py` 自动打齐 3 处补丁；<br/>• **轨道 B（网络并发，`~55–65 s`）**：后台利用系统 Python 开启 `HF_HUB_ENABLE_HF_TRANSFER=1` + `snapshot_download(max_workers=8)` 并发预取 `Pixal3D`（15 GB）、`BiRefNet`（444 MB）、`MoGe-2`（1.3 GB）与 `NAF` | 串行 `234 s` $\rightarrow$ **双轨并行 `~65 s`**（进入推理后热缓存加载仅 `~20 s`） | 利用 `uv` 装包期间的空闲网卡带宽并发拉满 1–2 Gbps 权重下载，消除首次推理 `182 s` 的串行 HTTP 阻塞 |
+| **Stage 2：单进程四步批量生成** | Colab L4（**`1.94 CU/hr`**） | 单进程 `run_batch.py` 顺序执行：<br/>① **批量 `BiRefNet` 抠图**（首图含加载 `8.7 s`，后续 `0.8 s/张`）$\rightarrow$ **`del` 释放 `1.2 GB` 显存**；<br/>② **批量 `MoGe-2` 相机外参估计**（首图含加载 `9.5 s`，后续 `0.2 s/张`）$\rightarrow$ **`del` 释放 `1.5 GB` 显存**；<br/>③ **共享单份 `DINOv3+NAF`（省 `3.6 GB`）逐个跑 `1024_cascade` 扩散**（`55–140 s/个`，峰值显存稳定 `12.91 GB`），原始网格存 `/tmp/current_mesh.pt`；<br/>④ **子进程 `export_glb_worker.py` 隔离烘焙 GLB**（`20–38 s/个`），远端自动打包 `/content/outputs.tar.gz` | **`~129 s / 模型`**（9 模型约 `19.7 min`，耗 `0.64 CU`） | 预处理模型用完即卸；C++/CUDA `CuMesh` 放入独立子进程并带 `remesh=False` 自动降级，主进程 15 GB 权重永不崩溃重拉 |
+| **Stage 3：产物下载、Gate A 秒级校验与立即关机** | 远端 $\rightarrow$ 本地（**校验通过即刻停机**） | ① 单次 `colab download` 拉回 `outputs.tar.gz`（30 MB 约 `3–5 s`）；<br/>② 本地运行 `verify_glb_outputs.py`（**`< 0.1 s`**）做 **Gate A 完整性校验**：核对模型数量、glTF 2.0 魔数头（`0x46546C67`）、JSON 块可解析、`final_faces > 5000`；<br/>③ **Gate A 打印 `GATE_A_PASS` 后 1 秒内执行 `colab stop -s pixal3d`**，并用 `colab sessions` 确认输出 `No active sessions.` | **`~5 s`**（关机后 GPU 计费归零） | **验证拆为两级**：关机前只做 `< 1 s` 的二进制/面数完整性校验（Gate A），**绝不挂着 GPU 等待本地 Blender 渲染** |
+| **Stage 4：本地 Blender 修模与场景验证（Gate B）** | 本地 WSL + Windows Blender 5.4（**`0 CU`**） | ① 运行 `render_glb_sheet.py` 做 `2 mm` 空间容差去碎块、最小包围盒体积调平与 `.webp` 预览渲染（`22 s`）；<br/>② 运行 `enrich_scene_pixal3d.py` 合入场景并渲染对比图（`58 s`），通过 `V1`（0 碰撞体泄漏）与 `V3`（动态位姿零改动）验证 | **`~80 s`**（纯本地，**`0 CU`**） | 本地修模与 Cycles 渲染完全不依赖 Colab，必须在确认 `colab stop` 之后执行 |
 
 ### 4. Blender 5.4 自动修模三步法
 
@@ -77,10 +84,26 @@
 
 > *注：任务 1 在优化 NAF `CrossAttention` 前运行；优化后（任务 3–9）`1024_cascade` 峰值显存从 `20.79 GB` 降至 **`12.91 GB`**，平均单模型总耗时 **`129.2 s`**。
 
-### 2. 算力成本核算
+### 2. 算力成本核算与优化前后对比
 
 - **硬件与费率**：Colab **NVIDIA L4 (24 GB)**，单价 **`1.94 Compute Units / 小时`**（约 `$0.194 / hr`）。
-- **总消耗**：包含环境搭建、排障与生成全部 9 个模型共消耗 **`3.37 CU`**（约 `¥2.45 RMB`）；其中**稳态纯批量推理（19.7 分钟）仅耗 `0.64 CU`，折合每个 3D 模型约 `0.071 CU`（约 `¥0.05 RMB`）**。
+- **探索期 vs 固化 SOP 算力对比（以 9 个 3D 模型批处理为例）**：
+
+| 环节 | 探索期实测耗时 / 算力 | 优化后五阶段 SOP 耗时 / 算力 | 优化手段 |
+|---|---|---|---|
+| 开机前准备（筛图、生图、写脚本） | 边开 GPU 边准备（混入租期） | **`0 s` GPU 租期（`0 CU`）** | Stage 0 本地预检门 + 单包 `colab_payload.tar.gz` |
+| 环境安装 + 16.7 GB 模型权重拉取 | `52 s` + `182 s` = **`234 s`（`0.13 CU`）** | **`~65 s` 双轨并行 + `~20 s` 热加载（`0.05 CU`）** | `setup_and_prefetch.sh`：`uv venv` 与 `HF_HUB_ENABLE_HF_TRANSFER=1` 8 线程并发预取重叠执行 |
+| 9 模型单进程批量生成 + GLB 烘焙 | **`998 s`（`16.6 min`，`0.54 CU`）** | **`998 s`（`16.6 min`，`0.54 CU`）** | 批量 `BiRefNet`/`MoGe-2` 用完即卸 + 共享 `DINOv3+NAF` + 子进程 `export_glb_worker.py` |
+| 产物下载 + Gate A 校验 + 关停实例 | 零散下载 + 本地跑完 Blender 才关机 | **`~5 s`（`< 0.01 CU`）** | 单包下载 `outputs.tar.gz` $\rightarrow$ `verify_glb_outputs.py`（`< 0.1 s` 校验 glTF 魔数与面数）$\rightarrow$ **立即 `colab stop` + `trap` 兜底** |
+| 本地 Blender 修模 + 场景合入渲染 | 约 `80 s`（期间若未关机白烧 GPU） | **`~80 s`（已关机，`0 CU`）** | Gate B 完全在本地 `0 CU` 下执行 |
+| **合计 GPU 计费时长 / 总成本** | **`~104 min` / `3.37 CU`（`¥2.45`）** | **`~18.2 min` / `~0.59 CU`（`¥0.43`，单模型 `~0.065 CU`）** | **消除了 82% 的非推理算力损耗** |
+
+- **可复用流水线脚本清单**（位于项目 `05-modelling/pixal3d_exp/colab_pipeline/`）：
+  - `colab_pixal3d_driver.sh`：本地一键主控脚本（含 Stage 0 预检、`trap 'colab stop ...' EXIT INT TERM`、上传、远端执行、下载、Gate A 校验、秒级停机、Gate B 本地 Blender 修模）；
+  - `setup_and_prefetch.sh`：远端双轨并行脚本（前台 `uv venv /content/venv310 --python 3.10` 装预编译 CUDA wheels + 打补丁；后台 `HF_HUB_ENABLE_HF_TRANSFER=1` + `ThreadPoolExecutor` 并发拉齐 4 个仓库共 16.7 GB 权重）；
+  - `patch_pixal3d.py`：幂等源码补丁（`BiRefNet` 公开权重、`NAF` $256\times$ 分组矩阵乘、`o_voxel` 5 行非流形清理）；
+  - `export_glb_worker.py`：`CuMesh` 子进程隔离烘焙器（带 `remesh=False` 降级保护）；
+  - `verify_glb_outputs.py`：本地 `< 0.1 s` 二进制 glTF 2.0 魔数头与面数校验器（Gate A 关机门限）。
 
 ---
 

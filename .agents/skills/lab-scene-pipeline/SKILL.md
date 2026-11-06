@@ -48,7 +48,9 @@ description: 场景流程：把实验室或工作站的需求一路做到可仿�
 ### 5 建模 → `05-modelling/`
 1. `design.py` 是唯一的参数源，Blender 构建和 MJCF 构建都从它读取。
 2. 命名约定：`ROOT_` / `VIS_` / `COL_`；导出 GLB 时按白名单只选视觉对象，导出后再读回检查。
-3. **参数化与 AI 3D 生成分工**：核心交互设备及大件规整箱体（冰箱、透明玻璃门试剂柜、实验台架）用 Blender 参数化建模（玻璃柜用参数化外壳+透射玻璃门，或冰箱用规整几何体+外部贴图）；非接触异形小件与柜内陈设（排风波纹管与集气罩、带盘绕电线的电源盒、墙面插座插头、柜内试剂瓶、废料桶）用 `colab-operator` 在 Colab L4 批量运行 Pixal3D 生成 `.glb`，经 Blender `2 mm` 空间容差去碎块与最小包围盒自动调平后作为 `VIS_` 合入。
+3. **参数化与 AI 3D 生成分工及 Colab 五阶段零浪费流程**：
+   - **分工**：核心交互设备及大件规整箱体（冰箱、透明玻璃门试剂柜、实验台架）用 Blender 参数化建模（玻璃柜用参数化外壳+透射玻璃门，内部小件逐个生成后摆入；或冰箱用规整几何体+外部贴图）；非接触异形小件与柜内陈设（排风波纹管与集气罩、带盘绕电线的电源盒、墙面插座插头、柜内试剂瓶、废料桶）用 `colab-operator` 在 Colab L4 批量运行 Pixal3D 生成 `.glb`。
+   - **Colab 五阶段 SOP**：① **开机前（0 CU）**：筛好物件、备齐 `.webp` 净图、跑 `colab sessions` 查孤儿实例、将输入与脚本打成单包 `colab_payload.tar.gz`，挂载 `trap 'colab stop ...' EXIT`；② **开机与双轨并行初始化（~65 s）**：申请 L4 并单次上传，前台 `uv venv --python 3.10` 装预编译 CUDA wheels + 打补丁（`~52 s`），后台同时用 `HF_HUB_ENABLE_HF_TRANSFER=1` 8 线程并发预取 16.7 GB 权重（`~60 s`）；③ **单进程四步批量生成（~129 s/个）**：批量 `BiRefNet` 抠图即卸 $\rightarrow$ 批量 `MoGe-2` 估外参即卸 $\rightarrow$ 共享 `DINOv3+NAF` 跑 `1024_cascade` 扩散 $\rightarrow$ 子进程 `export_glb_worker.py` 烘焙打包；④ **Gate A 秒级校验与立即关机（~5 s）**：单包下载 `outputs.tar.gz`，本地 `< 0.1 s` 校验 glTF 2.0 魔数头与面数，**通过后立即 `colab stop` 并确认 `No active sessions.`**（绝不挂着 GPU 等本地 Blender）；⑤ **Gate B 本地修模与合入（0 CU）**：Blender `2 mm` 空间容差去碎块与最小包围盒自动调平后作为 `VIS_` 合入。
 4. 预览渲染只作为验证证据，不需要审批。图片一律用 WebP。
 
 做法见 `docs/lessons/05-modelling.md` 与 `docs/lessons/09-pixal3d-colab-scene-dressing.md`。
