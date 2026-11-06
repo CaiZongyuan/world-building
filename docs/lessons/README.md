@@ -4,7 +4,7 @@
 
 **入门先读教程站点**：https://caizongyuan.github.io/world-building/（源码 `site/`）。七个阶段怎么接力、物理建模与物理测试、怎么用 skill，附 7 个可在浏览器里运行 MuJoCo 的实验台。
 - 实验台定义 `site/labs/labs.json` 由网页、`runner.py`（生成预计算回放 `site/labs/fallback/`）、`play.py`（在本机 MuJoCo 窗口里播放）共用；改了定义要重跑 `runner.py`。
-- 两个项目各自的学习页：`slice-01/index.html`（薄切片 01）、`full-lab/index.html`（全流程实验室的物理验证）。
+- 两个项目的案例页已搬到教程站点：[薄切片 01](https://caizongyuan.github.io/world-building/cases/slice-01)、[全流程实验室](https://caizongyuan.github.io/world-building/cases/full-lab)。
 
 每份阶段记录的固定结构：这一步做什么 → 输入 / 产物 / 完成判据 → 工具与调用方式 → 标准做法 → 踩过的坑（附证据）→ 阶段日志摘要。
 
