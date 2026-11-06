@@ -1,0 +1,19 @@
+{
+  "name": "world-building-site",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev --host 127.0.0.1 --port 5292",
+    "build": "vitepress build",
+    "preview": "vitepress preview --host 127.0.0.1 --port 5293",
+    "font": "uv run --no-project --with fonttools==4.67.0 --with brotli==1.2.0 python tools/subset_font.py"
+  },
+  "devDependencies": {
+    "@types/three": "0.183.1",
+    "three": "0.186.1",
+    "vitepress": "1.6.4",
+    "vue": "3.5.43"
+  },
+  "packageManager": "pnpm@12.14.0"
+}

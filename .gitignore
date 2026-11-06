@@ -13,3 +13,9 @@ projects/
 *.zip
 __pycache__/
 .venv/
+
+# 教程站点（site/）的依赖与构建产物
+site/node_modules/
+site/.vitepress/cache/
+site/.vitepress/dist/
+site/.vitepress/.temp/

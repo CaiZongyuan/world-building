@@ -1,0 +1,873 @@
+{
+ "labs": [
+  {
+   "id": "drop",
+   "title": "实验 1 · 软接触：放下一块板会陷进去多少",
+   "view": {
+    "plane": "xz",
+    "center": [
+     0,
+     0.012
+    ],
+    "span": 0.2,
+    "zoom": {
+     "center": [
+      0.064,
+      0.0
+     ],
+     "span": 0.004
+    }
+   },
+   "duration": 0.6,
+   "params": [
+    {
+     "id": "h",
+     "label": "松手高度（板底离台面）",
+     "default": 1,
+     "options": [
+      {
+       "label": "0（贴着放）",
+       "sub": {
+        "Z0": 0.01
+       }
+      },
+      {
+       "label": "0.3 mm",
+       "sub": {
+        "Z0": 0.0103
+       }
+      },
+      {
+       "label": "2 mm",
+       "sub": {
+        "Z0": 0.012
+       }
+      },
+      {
+       "label": "10 mm",
+       "sub": {
+        "Z0": 0.02
+       }
+      },
+      {
+       "label": "50 mm",
+       "sub": {
+        "Z0": 0.06
+       }
+      }
+     ]
+    },
+    {
+     "id": "tc",
+     "label": "接触时间常数 solref",
+     "default": 1,
+     "options": [
+      {
+       "label": "0.002 s（很硬）",
+       "sub": {
+        "TC": 0.002
+       }
+      },
+      {
+       "label": "0.004 s（小件用）",
+       "sub": {
+        "TC": 0.004
+       }
+      },
+      {
+       "label": "0.02 s（默认）",
+       "sub": {
+        "TC": 0.02
+       }
+      }
+     ]
+    }
+   ],
+   "xml": "<mujoco model='drop'><option timestep='0.0005'/><worldbody><geom name='fix_table' type='box' pos='0 0 -0.02' size='0.12 0.08 0.02' solref='{{TC}} 1'/><body name='plate' pos='0 0 {{Z0}}'><freejoint/><geom name='obj_plate' type='box' size='0.064 0.043 0.01' mass='0.3' solref='{{TC}} 1'/></body></worldbody></mujoco>",
+   "metrics": [
+    {
+     "id": "S3",
+     "label": "S3 最大穿透",
+     "kind": "maxpen",
+     "geoms": [
+      "obj_"
+     ],
+     "geoms2": [
+      "fix_"
+     ],
+     "unit": "mm",
+     "gate": {
+      "op": "<=",
+      "v": 0.25
+     },
+     "series": true
+    }
+   ]
+  },
+  {
+   "id": "grip",
+   "title": "实验 2 · 摩擦夹持：夹多紧才不掉、又不压穿",
+   "view": {
+    "plane": "xz",
+    "center": [
+     0,
+     0.045
+    ],
+    "span": 0.22,
+    "zoom": {
+     "center": [
+      -0.02,
+      0.03
+     ],
+     "span": 0.004
+    }
+   },
+   "duration": 2.2,
+   "params": [
+    {
+     "id": "F",
+     "label": "夹持力上限",
+     "default": 2,
+     "options": [
+      {
+       "label": "0.5 N",
+       "sub": {
+        "F": 0.5
+       }
+      },
+      {
+       "label": "2 N",
+       "sub": {
+        "F": 2
+       }
+      },
+      {
+       "label": "8 N",
+       "sub": {
+        "F": 8
+       }
+      },
+      {
+       "label": "60 N",
+       "sub": {
+        "F": 60
+       }
+      }
+     ]
+    },
+    {
+     "id": "mu",
+     "label": "指垫摩擦系数 μ",
+     "default": 1,
+     "options": [
+      {
+       "label": "0.4",
+       "sub": {
+        "MU": 0.4
+       }
+      },
+      {
+       "label": "1.0",
+       "sub": {
+        "MU": 1.0
+       }
+      }
+     ]
+    },
+    {
+     "id": "pad",
+     "label": "接触设置",
+     "default": 0,
+     "options": [
+      {
+       "label": "默认软接触（solref 0.02）",
+       "sub": {
+        "PAD": 0.02,
+        "NS": 0
+       }
+      },
+      {
+       "label": "加硬指垫（solref 0.002）",
+       "sub": {
+        "PAD": 0.002,
+        "NS": 0
+       }
+      },
+      {
+       "label": "加硬指垫 + noslip",
+       "sub": {
+        "PAD": 0.002,
+        "NS": 4
+       }
+      }
+     ]
+    }
+   ],
+   "xml": "<mujoco model='grip'><option timestep='0.0005' noslip_iterations='{{NS}}'/><worldbody><geom name='fix_table' type='box' pos='0 0 -0.02' size='0.12 0.06 0.02'/><body name='hand' pos='0 0 0' gravcomp='1'><joint name='lift' type='slide' axis='0 0 1' range='-0.01 0.12'/><geom name='tool_palm' type='box' pos='0 0 0.075' size='0.06 0.02 0.006' mass='0.3' contype='0' conaffinity='0'/><body name='fl' pos='-0.04 0 0' gravcomp='1'><joint name='jl' type='slide' axis='1 0 0' range='-0.01 0.03'/><geom name='tool_fl_stem' type='box' pos='-0.006 0 0.055' size='0.002 0.006 0.018' mass='0.02' contype='0' conaffinity='0'/><geom name='pad_fl' type='box' pos='-0.004 0 0.03' size='0.004 0.012 0.012' mass='0.02' friction='{{MU}} 0.005 0.0001' solref='{{PAD}} 1' priority='1'/></body><body name='fr' pos='0.04 0 0' gravcomp='1'><joint name='jr' type='slide' axis='1 0 0' range='-0.03 0.01'/><geom name='tool_fr_stem' type='box' pos='0.006 0 0.055' size='0.002 0.006 0.018' mass='0.02' contype='0' conaffinity='0'/><geom name='pad_fr' type='box' pos='0.004 0 0.03' size='0.004 0.012 0.012' mass='0.02' friction='{{MU}} 0.005 0.0001' solref='{{PAD}} 1' priority='1'/></body></body><body name='block' pos='0 0 0.0301'><freejoint/><geom name='obj_block' type='box' size='0.02 0.02 0.03' mass='0.3'/></body></worldbody><actuator><position name='a_lift' joint='lift' kp='4000' kv='200' forcerange='-200 200'/><position name='a_l' joint='jl' kp='10000' kv='100' forcerange='-{{F}} {{F}}'/><position name='a_r' joint='jr' kp='10000' kv='100' forcerange='-{{F}} {{F}}'/></actuator></mujoco>",
+   "control": [
+    {
+     "act": "a_l",
+     "kind": "pwl",
+     "pts": [
+      [
+       0,
+       0
+      ],
+      [
+       0.1,
+       0
+      ],
+      [
+       0.4,
+       0.0185
+      ],
+      [
+       0.75,
+       0.03
+      ]
+     ]
+    },
+    {
+     "act": "a_r",
+     "kind": "pwl",
+     "pts": [
+      [
+       0,
+       0
+      ],
+      [
+       0.1,
+       0
+      ],
+      [
+       0.4,
+       -0.0185
+      ],
+      [
+       0.75,
+       -0.03
+      ]
+     ]
+    },
+    {
+     "act": "a_lift",
+     "kind": "pwl",
+     "pts": [
+      [
+       0,
+       0
+      ],
+      [
+       0.8,
+       0
+      ],
+      [
+       1.5,
+       0.06
+      ]
+     ]
+    }
+   ],
+   "metrics": [
+    {
+     "id": "slip",
+     "label": "提起后块相对手的下滑",
+     "kind": "slip",
+     "body": "block",
+     "ref": "hand",
+     "t0": 0.75,
+     "unit": "mm",
+     "gate": {
+      "op": "<=",
+      "v": 1.0
+     },
+     "series": true
+    },
+    {
+     "id": "S3",
+     "label": "S3 最大穿透",
+     "kind": "maxpen",
+     "geoms": [
+      "pad_"
+     ],
+     "geoms2": [
+      "obj_"
+     ],
+     "unit": "mm",
+     "gate": {
+      "op": "<=",
+      "v": 0.25
+     }
+    }
+   ]
+  },
+  {
+   "id": "vjaw",
+   "title": "实验 3 · 对中：平夹块 vs V 形夹块（俯视）",
+   "view": {
+    "plane": "xy",
+    "center": [
+     0,
+     0
+    ],
+    "span": 0.06,
+    "zoom": {
+     "center": [
+      0,
+      0
+     ],
+     "span": 0.012,
+     "mark": [
+      0,
+      0
+     ]
+    }
+   },
+   "duration": 2.2,
+   "params": [
+    {
+     "id": "shape",
+     "label": "夹块形状",
+     "default": 1,
+     "options": [
+      {
+       "label": "平夹块",
+       "sub": {
+        "PADL": "<geom name='pad_l' type='box' pos='-0.0105 0 0.05' size='0.002 0.012 0.04' friction='{{MU}} 0.005 0.0001' priority='1' solref='0.004 1'/>",
+        "PADR": "<geom name='pad_r' type='box' pos='0.0105 0 0.05' size='0.002 0.012 0.04' friction='{{MU}} 0.005 0.0001' priority='1' solref='0.004 1'/>"
+       }
+      },
+      {
+       "label": "V 形夹块",
+       "sub": {
+        "PADL": "<geom name='pad_l1' type='box' pos='-0.007425 0.007425 0.05' euler='0 0 -45' size='0.002 0.006 0.04' friction='{{MU}} 0.005 0.0001' priority='1' solref='0.004 1'/><geom name='pad_l2' type='box' pos='-0.007425 -0.007425 0.05' euler='0 0 45' size='0.002 0.006 0.04' friction='{{MU}} 0.005 0.0001' priority='1' solref='0.004 1'/>",
+        "PADR": "<geom name='pad_r1' type='box' pos='0.007425 0.007425 0.05' euler='0 0 45' size='0.002 0.006 0.04' friction='{{MU}} 0.005 0.0001' priority='1' solref='0.004 1'/><geom name='pad_r2' type='box' pos='0.007425 -0.007425 0.05' euler='0 0 -45' size='0.002 0.006 0.04' friction='{{MU}} 0.005 0.0001' priority='1' solref='0.004 1'/>"
+       }
+      }
+     ]
+    },
+    {
+     "id": "mu",
+     "label": "夹块衬面摩擦 μ",
+     "default": 0,
+     "options": [
+      {
+       "label": "0.2（低摩擦衬面）",
+       "sub": {
+        "MU": 0.2
+       }
+      },
+      {
+       "label": "0.6",
+       "sub": {
+        "MU": 0.6
+       }
+      },
+      {
+       "label": "1.5（> 45° 自锁系数 1）",
+       "sub": {
+        "MU": 1.5
+       }
+      }
+     ]
+    },
+    {
+     "id": "fm",
+     "label": "摩擦模型",
+     "default": 1,
+     "options": [
+      {
+       "label": "默认（金字塔锥，软摩擦会蠕变）",
+       "sub": {
+        "FM": ""
+       }
+      },
+      {
+       "label": "严格（elliptic + impratio 10 + noslip）",
+       "sub": {
+        "FM": "cone='elliptic' impratio='10' noslip_iterations='10'"
+       }
+      }
+     ]
+    }
+   ],
+   "xml": "<mujoco model='vjaw'><option timestep='0.0005' {{FM}}/><worldbody><geom name='fix_seat' type='box' pos='0 0 -0.005' size='0.03 0.03 0.005' friction='0.2 0.005 0.0001' priority='1' solref='0.004 1'/><body name='jaw_l' pos='-0.012 0 0'><joint name='jl' type='slide' axis='1 0 0' range='-0.005 0.02'/><geom name='tool_jl' type='box' pos='-0.022 0 0.05' size='0.008 0.014 0.04' mass='0.2' contype='0' conaffinity='0'/>{{PADL}}</body><body name='jaw_r' pos='0.012 0 0'><joint name='jr' type='slide' axis='1 0 0' range='-0.02 0.005'/><geom name='tool_jr' type='box' pos='0.022 0 0.05' size='0.008 0.014 0.04' mass='0.2' contype='0' conaffinity='0'/>{{PADR}}</body><body name='tube' pos='0.0008 0.0016 0.05'><freejoint/><geom name='obj_tube' type='cylinder' size='0.0085 0.05' mass='0.007' solref='0.004 1'/></body></worldbody><actuator><position name='a_l' joint='jl' kp='3000' kv='60' forcerange='-6 6'/><position name='a_r' joint='jr' kp='3000' kv='60' forcerange='-6 6'/></actuator></mujoco>",
+   "control": [
+    {
+     "act": "a_l",
+     "kind": "pwl",
+     "pts": [
+      [
+       0,
+       0
+      ],
+      [
+       0.2,
+       0
+      ],
+      [
+       0.6,
+       0.008
+      ],
+      [
+       1.5,
+       0.0122
+      ]
+     ]
+    },
+    {
+     "act": "a_r",
+     "kind": "pwl",
+     "pts": [
+      [
+       0,
+       0
+      ],
+      [
+       0.2,
+       0
+      ],
+      [
+       0.6,
+       -0.008
+      ],
+      [
+       1.5,
+       -0.0122
+      ]
+     ]
+    }
+   ],
+   "metrics": [
+    {
+     "id": "S14",
+     "label": "S14 夹紧后管心偏离轴线",
+     "kind": "xyerr",
+     "body": "tube",
+     "target": [
+      0,
+      0
+     ],
+     "unit": "mm",
+     "gate": {
+      "op": "<=",
+      "v": 1.0
+     },
+     "series": true
+    }
+   ]
+  },
+  {
+   "id": "servo",
+   "title": "实验 4 · 执行器：位置伺服的滞后、下垂与 biastype 陷阱",
+   "view": {
+    "plane": "xz",
+    "center": [
+     0.12,
+     0.3
+    ],
+    "span": 0.5
+   },
+   "duration": 4.0,
+   "params": [
+    {
+     "id": "ff",
+     "label": "加速度前馈 (kv/kp)·q̇_ref",
+     "default": 0,
+     "options": [
+      {
+       "label": "关",
+       "sub": {
+        "FF": 0
+       }
+      },
+      {
+       "label": "开",
+       "sub": {
+        "FF": 0.04
+       }
+      }
+     ]
+    },
+    {
+     "id": "gc",
+     "label": "重力补偿 gravcomp",
+     "default": 0,
+     "options": [
+      {
+       "label": "关",
+       "sub": {
+        "GC": 0
+       }
+      },
+      {
+       "label": "开",
+       "sub": {
+        "GC": 1
+       }
+      }
+     ]
+    },
+    {
+     "id": "bt",
+     "label": "biastype",
+     "default": 0,
+     "options": [
+      {
+       "label": "affine（正确）",
+       "sub": {
+        "BT": "affine"
+       }
+      },
+      {
+       "label": "none（漏设）",
+       "sub": {
+        "BT": "none"
+       }
+      }
+     ]
+    }
+   ],
+   "xml": "<mujoco model='servo'><option timestep='0.001'/><worldbody><geom name='fix_post' type='box' pos='0 0 0.14' size='0.012 0.012 0.14' contype='0' conaffinity='0'/><body name='arm' pos='0 0 0.3' gravcomp='{{GC}}'><joint name='j' type='hinge' axis='0 -1 0' range='-90 90' limited='true'/><geom name='obj_arm' type='capsule' fromto='0 0 0 0.3 0 0' size='0.012' mass='1.0'/><geom name='obj_tip' type='sphere' pos='0.3 0 0' size='0.02' mass='0.2'/></body></worldbody><actuator><general name='a' joint='j' gainprm='50' biastype='{{BT}}' biasprm='0 -50 -2' forcerange='-25 25'/></actuator></mujoco>",
+   "control": [
+    {
+     "act": "a",
+     "kind": "sine",
+     "A": 0.3,
+     "w": 3.1416,
+     "c": 0.0,
+     "ramp": 0.5,
+     "ff": "{{FF}}"
+    }
+   ],
+   "metrics": [
+    {
+     "id": "track",
+     "label": "跟踪误差（1 s 以后）",
+     "kind": "track",
+     "joint": "j",
+     "act": "a",
+     "t0": 1.0,
+     "unit": "°",
+     "gate": {
+      "op": "<=",
+      "v": 1.0
+     },
+     "series": true
+    }
+   ]
+  },
+  {
+   "id": "weld",
+   "title": "实验 5 · weld 约束链：最轻的件放在中间会怎样",
+   "view": {
+    "plane": "xz",
+    "center": [
+     0.3,
+     0.06
+    ],
+    "span": 0.2
+   },
+   "duration": 2.6,
+   "params": [
+    {
+     "id": "chain",
+     "label": "约束怎么挂",
+     "default": 0,
+     "options": [
+      {
+       "label": "手 → 盖 → 管（改前）",
+       "sub": {
+        "W1": "<weld name='w_hand' body1='hand' body2='cap' solref='{{WS}} 1'/>"
+       }
+      },
+      {
+       "label": "手 → 管，盖跟管（改后）",
+       "sub": {
+        "W1": "<weld name='w_hand' body1='hand' body2='tube' solref='{{WS}} 1'/>"
+       }
+      }
+     ]
+    },
+    {
+     "id": "spd",
+     "label": "转身速度",
+     "default": 1,
+     "options": [
+      {
+       "label": "慢（1.5 s 转 90°）",
+       "sub": {
+        "T1": 2.1
+       }
+      },
+      {
+       "label": "快（0.6 s 转 90°）",
+       "sub": {
+        "T1": 1.2
+       }
+      }
+     ]
+    },
+    {
+     "id": "ws",
+     "label": "weld 刚度 solref",
+     "default": 1,
+     "options": [
+      {
+       "label": "0.02 s（默认）",
+       "sub": {
+        "WS": 0.02
+       }
+      },
+      {
+       "label": "0.005 s（加硬）",
+       "sub": {
+        "WS": 0.005
+       }
+      }
+     ]
+    }
+   ],
+   "xml": "<mujoco model='weld'><option timestep='0.0005'/><worldbody><geom name='fix_post' type='cylinder' pos='0 0 0.05' size='0.02 0.05'/><geom name='fix_hole_a' type='box' pos='0.3 0.0101 0.012' size='0.012 0.0014 0.012' friction='1 0.005 0.0001'/><geom name='fix_hole_b' type='box' pos='0.3 -0.0101 0.012' size='0.012 0.0014 0.012' friction='1 0.005 0.0001'/><body name='arm' pos='0 0 0.1' gravcomp='1'><joint name='yaw' type='hinge' axis='0 0 1'/><geom name='tool_link' type='box' pos='0.15 0 0' size='0.15 0.008 0.008' mass='0.5' contype='0' conaffinity='0'/><body name='hand' pos='0.3 0 0' gravcomp='1'><joint name='lift' type='slide' axis='0 0 1' range='-0.1 0.1'/><geom name='tool_hand' type='box' pos='0 0 0.012' size='0.016 0.016 0.01' mass='0.3' contype='0' conaffinity='0'/></body></body><body name='cap' pos='0.3 0 0.096'><freejoint/><geom name='obj_cap' type='cylinder' size='0.0095 0.004' mass='0.003' contype='0' conaffinity='0'/></body><body name='tube' pos='0.3 0.0004 0.042'><freejoint/><geom name='obj_tube' type='cylinder' size='0.0085 0.05' mass='0.007' friction='1 0.005 0.0001'/></body></worldbody><equality>{{W1}}<weld name='w_thread' body1='cap' body2='tube' solref='{{WS}} 1'/></equality><actuator><position name='a_yaw' joint='yaw' kp='300' kv='40' forcerange='-50 50'/><position name='a_lift' joint='lift' kp='3000' kv='150' forcerange='-100 100'/></actuator></mujoco>",
+   "control": [
+    {
+     "act": "a_lift",
+     "kind": "pwl",
+     "pts": [
+      [
+       0,
+       0
+      ],
+      [
+       0.2,
+       0
+      ],
+      [
+       0.5,
+       0.06
+      ]
+     ]
+    },
+    {
+     "act": "a_yaw",
+     "kind": "pwl",
+     "pts": [
+      [
+       0,
+       0
+      ],
+      [
+       0.6,
+       0
+      ],
+      [
+       "{{T1}}",
+       1.5708
+      ]
+     ]
+    }
+   ],
+   "metrics": [
+    {
+     "id": "tilt",
+     "label": "管相对手的倾斜",
+     "kind": "reltilt",
+     "body": "tube",
+     "ref": "hand",
+     "t0": 0.05,
+     "unit": "°",
+     "gate": {
+      "op": "<=",
+      "v": 1.0
+     },
+     "series": true
+    }
+   ]
+  },
+  {
+   "id": "place",
+   "title": "实验 6 · 跑一次门限：放板（名义流程 vs 负例）",
+   "view": {
+    "plane": "xz",
+    "center": [
+     0,
+     0.03
+    ],
+    "span": 0.24,
+    "zoom": {
+     "center": [
+      -0.064,
+      0.0
+     ],
+     "span": 0.004
+    }
+   },
+   "duration": 2.4,
+   "params": [
+    {
+     "id": "v",
+     "label": "运行",
+     "default": 0,
+     "options": [
+      {
+       "label": "名义流程：压上 0.5 mm 再松手",
+       "sub": {
+        "REL": -0.0505,
+        "SUPC": "",
+        "FLOOR": "<geom name='fix_floor' type='box' pos='0 0 -0.32' size='0.12 0.08 0.02'/>"
+       }
+      },
+      {
+       "label": "做错：离支撑面 20 mm 就松手",
+       "sub": {
+        "REL": -0.03,
+        "SUPC": "",
+        "FLOOR": "<geom name='fix_floor' type='box' pos='0 0 -0.32' size='0.12 0.08 0.02'/>"
+       }
+      },
+      {
+       "label": "负例 N1：去掉托面的碰撞",
+       "sub": {
+        "REL": -0.0505,
+        "SUPC": "contype='0' conaffinity='0'",
+        "FLOOR": "<geom name='fix_floor' type='box' pos='0 0 -0.32' size='0.12 0.08 0.02'/>"
+       }
+      }
+     ]
+    }
+   ],
+   "xml": "<mujoco model='place'><option timestep='0.0005'/><worldbody>{{FLOOR}}<geom name='sup_drawer' type='box' pos='0 0 -0.01' size='0.08 0.055 0.01' solref='0.004 1' {{SUPC}}/><body name='hand' pos='0 0 0.05' gravcomp='1'><joint name='lift' type='slide' axis='0 0 1' range='-0.1 0.1'/><geom name='tool_palm' type='box' pos='0 0 0.045' size='0.085 0.02 0.006' mass='0.3' contype='0' conaffinity='0'/><body name='fl' pos='-0.069 0 0' gravcomp='1'><joint name='jl' type='slide' axis='1 0 0' range='-0.02 0.01'/><geom name='tool_fl_stem' type='box' pos='-0.006 0 0.027' size='0.002 0.006 0.016' mass='0.02' contype='0' conaffinity='0'/><geom name='pad_fl' type='box' pos='-0.004 0 0.01' size='0.004 0.012 0.006' mass='0.02' friction='1 0.005 0.0001' solref='0.002 1' priority='1'/></body><body name='fr' pos='0.069 0 0' gravcomp='1'><joint name='jr' type='slide' axis='1 0 0' range='-0.01 0.02'/><geom name='tool_fr_stem' type='box' pos='0.006 0 0.027' size='0.002 0.006 0.016' mass='0.02' contype='0' conaffinity='0'/><geom name='pad_fr' type='box' pos='0.004 0 0.01' size='0.004 0.012 0.006' mass='0.02' friction='1 0.005 0.0001' solref='0.002 1' priority='1'/></body></body><body name='plate' pos='0 0 0.06'><freejoint/><geom name='obj_plate' type='box' size='0.064 0.043 0.01' mass='0.12' solref='0.004 1'/></body></worldbody><actuator><position name='a_lift' joint='lift' kp='4000' kv='200' forcerange='-200 200'/><position name='a_l' joint='jl' kp='3000' kv='30' forcerange='-8 8'/><position name='a_r' joint='jr' kp='3000' kv='30' forcerange='-8 8'/></actuator></mujoco>",
+   "init_qpos": {
+    "jl": 0.0049,
+    "jr": -0.0049
+   },
+   "control": [
+    {
+     "act": "a_l",
+     "kind": "pwl",
+     "pts": [
+      [
+       0,
+       0.008
+      ],
+      [
+       1.25,
+       0.008
+      ],
+      [
+       1.45,
+       -0.006
+      ]
+     ]
+    },
+    {
+     "act": "a_r",
+     "kind": "pwl",
+     "pts": [
+      [
+       0,
+       -0.008
+      ],
+      [
+       1.25,
+       -0.008
+      ],
+      [
+       1.45,
+       0.006
+      ]
+     ]
+    },
+    {
+     "act": "a_lift",
+     "kind": "pwl",
+     "pts": [
+      [
+       0,
+       0
+      ],
+      [
+       0.3,
+       0
+      ],
+      [
+       1.0,
+       "{{REL}}"
+      ],
+      [
+       1.6,
+       "{{REL}}"
+      ],
+      [
+       2.1,
+       0.03
+      ]
+     ]
+    }
+   ],
+   "metrics": [
+    {
+     "id": "S3",
+     "label": "S3 最大穿透",
+     "kind": "maxpen",
+     "geoms": [
+      "obj_"
+     ],
+     "geoms2": [
+      "sup_",
+      "fix_"
+     ],
+     "unit": "mm",
+     "gate": {
+      "op": "<=",
+      "v": 0.25
+     },
+     "series": true
+    },
+    {
+     "id": "S7",
+     "label": "S7 松爪前 0.1 s 支撑力 ÷ 重量（取最小）",
+     "kind": "support",
+     "body": "plate",
+     "geoms": [
+      "obj_"
+     ],
+     "geoms2": [
+      "sup_"
+     ],
+     "t0": 1.15,
+     "t1": 1.25,
+     "unit": "×",
+     "gate": {
+      "op": ">=",
+      "v": 0.8
+     }
+    },
+    {
+     "id": "S8",
+     "label": "S8 终点位置误差",
+     "kind": "poserr",
+     "body": "plate",
+     "target": [
+      0,
+      0,
+      0.01
+     ],
+     "t0": 2.3,
+     "unit": "mm",
+     "gate": {
+      "op": "<=",
+      "v": 3.0
+     }
+    }
+   ]
+  },
+  {
+   "id": "chain",
+   "special": "chain",
+   "title": "实验 7 · 状态接力：分两段跑，能不能和一次跑完一样",
+   "base": "place",
+   "split": 0.6
+  }
+ ]
+}

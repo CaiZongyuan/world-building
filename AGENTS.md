@@ -7,6 +7,7 @@
 - 生成图片按 `docs/agents/image-generation.md`。
 - 项目目录、验证门命令、外部工具调用见 `docs/agents/project-layout.md`；测试 `uv run --extra sim pytest`。
 - 新建或推进场景项目：用 skill `lab-scene-pipeline`。
+- 教程站点在 `site/`（VitePress，推送 main 后自动发布到 GitHub Pages）；流程变了就同步改它。
 
 ## Agent skills
 
