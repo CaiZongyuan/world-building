@@ -35,7 +35,9 @@
 5. 门限放在 `03-plan/thresholds.json`（plan 冻结时一并生成），验证门只读这个文件。
 6. **参数化硬表面与 AI 3D 生成（Pixal3D）的分工边界**：
    - **大件规整家具/箱体（冰箱、双门玻璃试剂柜、铝型材实验台、护栏）一律用 Blender 参数化建模**：透明柜体用 Blender 做外壳、隔板与透射玻璃门（`Transmission=0.92`），里面的试剂瓶等小物件再用 3D 模型逐个生成摆入；实心冰箱用 Blender 做规整几何体加正面控制面板贴图。直接用单图 3D 扩散生成整台大柜子会导致大平面边缘发肉、烘焙阴影显脏，且 `o_voxel` 的 `OPAQUE` 材质会把透明玻璃门封死成实心白门。
-   - **非接触异形机电小件与散装容器**（带盘绕电线的台下 UPS 电源盒、蓝色波纹排风管与金属喉箍、带插头线的墙面插座、培养基玻璃瓶、废料桶）在 Colab L4 上批量运行 `TencentARC/Pixal3D` 生成 `.glb`，再经 Blender 空间容差（`2 mm`）去碎块和最小包围盒自动调平后合入。详见 `docs/lessons/09-pixal3d-colab-scene-dressing.md`。
+   - **非接触异形机电小件与散装容器**（带盘绕电线的台下 UPS 电源盒、蓝色波纹排风管与金属喉箍、带插头线的墙面插座、培养基玻璃瓶、废料桶）在 Colab L4 上按五阶段零浪费流程批量运行 `TencentARC/Pixal3D` 生成 `.glb`，再经 Blender 四步自动修模合入：
+     1. **Pixal3D 批量生成四步法**：① `BiRefNet`（`ZhengPeng7/BiRefNet`）批量抠图居中并立即释放显存；② `MoGe-2` 批量估计相机 `fov_deg` 与外参并立即释放显存；③ 4 个特征提取器共享单份 `DINOv3 + NAF`（配合 $256\times$ 分组矩阵乘显存优化）跑 `1024_cascade` 3D 稀疏体素扩散；④ 子进程隔离运行 `o_voxel.postprocess.to_glb`（补齐 `remesh=True` 的 5 行非流形清理，`decimation_target=80k–100k`，`texture_size=2048`），打包下载并通过 `< 0.1 s` 二进制头校验后立即 `colab stop`；
+     2. **Blender 5.4 自动修模四步法**：① **三维空间容差（`2 mm`）网格哈希连通域过滤**（跨 UV 接缝焊合重合顶点，避免误删被 `uv_unwrap` 切开的波纹管与贴纸，仅剔除 `< 2%` 的外部悬空噪点块）；② **粗到细最小包围盒体积（Min-Volume OBB）自动调平**（消除 `MoGe-2` 单图 `11°–29°` 俯仰/横滚倾角，底面归零到 $z=0$）；③ **按 `dimensions.md` 真实米制尺寸三轴归一化**（统一为 `+Y` 正面、`+Z` 朝上、底面中心原点）；④ **以 `VIS_pixal3d__*` 挂入独立 Collection**（透明玻璃柜采用 Blender 参数化柜壳 + 内部 `bottle_proto.copy()` 共享网格阵列，确保 `V1`/`V3` 验证门一次通过）。完整代码见 `docs/lessons/09-pixal3d-colab-scene-dressing.md`。
 
 ## 踩过的坑
 
