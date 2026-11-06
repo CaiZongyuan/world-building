@@ -9,12 +9,17 @@ description: 用 Colab L4 批量运行 TencentARC/Pixal3D 生成实验室异形�
 
 <div class="wb-grid2">
 <figure class="wb-figure"><img :src="$withBase('/img/pixal3d/overview_before.webp')" alt="合入前全景" /><figcaption><b>合入前（01_overview）</b>：左后方冰箱与试剂柜仅为白盒占位，墙面无插座与线槽，地面与台下缺乏真实机电细节。</figcaption></figure>
-<figure class="wb-figure"><img :src="$withBase('/img/pixal3d/overview_after.webp')" alt="合入后全景" /><figcaption><b>合入后（01_overview_pixal3d）</b>：采用「Blender 参数化透明玻璃门试剂柜 + 内部 16 个 Pixal3D 生成试剂瓶」混合装配，补充台下电源盒、集气罩、插座线槽与地面斑点环氧材质。</figcaption></figure>
+<figure class="wb-figure"><img :src="$withBase('/img/pixal3d/overview_after.webp')" alt="合入后全景" /><figcaption><b>合入后（01_overview_pixal3d）</b>：采用「Blender 参数化透明玻璃门试剂柜 + 内部 16 个 Pixal3D 生成试剂瓶」混合装配，补充台下电源盒、集气罩、插座线槽、地面斑点环氧材质与低调品牌标识。</figcaption></figure>
 </div>
 
 <div class="wb-grid2">
-<figure class="wb-figure"><img :src="$withBase('/img/pixal3d/centrifuge_before.webp')" alt="合入前离心机特写" /><figcaption><b>合入前（03_centrifuge）</b>：离心机与开盖器周边台下空旷，缺少排风集气罩、电源盒、废料桶与墙面供电插头。</figcaption></figure>
-<figure class="wb-figure"><img :src="$withBase('/img/pixal3d/centrifuge_after.webp')" alt="合入后离心机特写" /><figcaption><b>合入后（03_centrifuge_pixal3d）</b>：合入 Pixal3D 生成并经 Blender 自动调平的波纹集气罩、230V 电源盒（带盘绕线）、双联插座插头与废料桶，V1/V3 验证门全部 PASS。</figcaption></figure>
+<figure class="wb-figure"><img :src="$withBase('/img/pixal3d/workstation_before.webp')" alt="合入前工作站特写" /><figcaption><b>合入前（02_workstation）</b>：前门厚板折射产生严重双像重影，箱内移液头与孔板重影错位，台面缺乏深灰理化板质感。</figcaption></figure>
+<figure class="wb-figure"><img :src="$withBase('/img/pixal3d/workstation_after.webp')" alt="合入后工作站特写" /><figcaption><b>合入后（02_workstation_pixal3d）</b>：改用零折射薄壁建筑玻璃 Shader 消除双影，升级深灰理化板台面、箱内顶置补光及 <code>LUMEN TECH · LAB WORLD</code> 激光镭雕与丝印。</figcaption></figure>
+</div>
+
+<div class="wb-grid2">
+<figure class="wb-figure"><img :src="$withBase('/img/pixal3d/centrifuge_before.webp')" alt="合入前离心机特写" /><figcaption><b>合入前（03_centrifuge）</b>：离心机与开盖器周边台下空旷，缺少电源盒、废料桶与墙面供电插头线缆。</figcaption></figure>
+<figure class="wb-figure"><img :src="$withBase('/img/pixal3d/centrifuge_after.webp')" alt="合入后离心机特写" /><figcaption><b>合入后（03_centrifuge_pixal3d）</b>：合入 Pixal3D 生成的 230V 电源盒、双联插座（切除底部烘焙残线并接通连续 3D 悬链电缆深入设备机壳）与废料桶，V1/V3 验证门全部 PASS。</figcaption></figure>
 </div>
 
 ---

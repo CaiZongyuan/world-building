@@ -1,13 +1,15 @@
 ---
 title: 07 位姿绑定与渲染
-description: 把 MuJoCo 记录的刚体位姿逐帧写进 Blender 的视觉根对象，用 draft 档位渲出与仿真等长的成片。
+description: 把 MuJoCo 记录的刚体位姿逐帧写进 Blender 的视觉根对象，经过六步 Look-Dev 质感与机电细节升级、分期镜头与灯光调校，渲出与仿真等长的真实感成片。
 ---
 
 # 07 位姿绑定与渲染
 
 <StageHeader stage="render" />
 
-渲染阶段把 MuJoCo 记录下来的刚体位姿逐帧写进 Blender 的视觉根对象，再用 Cycles 渲出**与仿真等长**的成片：不加速，不剪辑。画面里的每一个动作都必须来自物理仿真，不允许手动打关键帧。
+渲染阶段做两件事：
+1. **刚体位姿严格绑定**：把 MuJoCo 记录下来的刚体位姿（`states_30fps.npz`）逐帧写进 Blender 的视觉根对象（`ROOT_*`），成片与仿真等长，不加速、不剪辑，画面里的每一个动作都来自物理仿真；
+2. **场景 Look-Dev（真实质感、非接触陈设、工业标识、光照与镜头）**：在不改动任何一根刚体动画曲线（保持 `V3` 位姿误差为 0）且不引入任何碰撞体（保持 `V1` 通过）的前提下，把服务于物理求解的“仿真白盒”升级为具有真实洁净室材质、合理机电走线、克制工业丝印与通透光影的自动化实验室场景。
 
 ## 拖一下看看
 
@@ -15,27 +17,165 @@ description: 把 MuJoCo 记录的刚体位姿逐帧写进 Blender 的视觉根�
 
 <FilmScrub set="slice" />
 
-## 位姿绑定：一个视觉根对应一个 body
+---
+
+## 一、 位姿绑定：一个视觉根对应一个 body
 
 ```
-states_30fps.npz → 每个视觉根 = 一个 MuJoCo body → 逐帧写世界位姿（插值 CONSTANT）→ Cycles draft 渲帧 → ffmpeg + 字幕 → 验证门 V1–V4
+states_30fps.npz → 每个视觉根 = 一个 MuJoCo body → 逐帧写世界位姿（插值 CONSTANT）→ Look-Dev 质感与机电增补 → 分期镜头硬切 → Cycles 渲帧 → ffmpeg + 字幕 → 验证门 V1–V4
 ```
 
-1. **只按白名单导入。** 名字带 `COL_` 或 collision 的对象直接排除，而不是导入后隐藏；复用资产里的灯光、相机、展示台也不导入。
-2. **视觉根和 body 一一对应。** 每个根对象不设父级，直接写入该帧仿真的世界位置和四元数，关键帧插值用 CONSTANT；全程不动的 body 不打关键帧。
+1. **只按白名单导入。** 名字带 `COL_` 或 `collision` 的对象直接排除，而不是导入后隐藏；复用资产里的灯光、相机、展示台也不导入。
+2. **视觉根和 body 一一对应。** 每个根对象不设父级，直接写入该帧仿真的世界位置和四元数，关键帧插值用 `CONSTANT`；全程不动的 body 不打关键帧。
 3. **复用资产的视觉不在 body 原点时**，父对象按下式取位姿：`对象世界 = S_body(t) · R_body_rest⁻¹ · StationT · E_rest`。其中 `S_body(t)` 是仿真里这个 body 的当前世界位姿，`R_body_rest` 是原始模型零位下它的世界位姿，`StationT` 是工位的摆放变换，`E_rest` 是父空物体在资产文件里的矩阵。
-4. **仿真里改过的几何，视觉模型要同步改**（例如托槽开槽用布尔 DIFFERENCE 做出来）。
-5. **绑定之后马上自检**：V1 场景里不能有碰撞代理；V3 抽查若干帧，Blender 世界位姿要和仿真记录一致。比较四元数时要记住 q 和 −q 是同一个旋转。
+4. **仿真里改过的几何，视觉模型要同步改**（例如托槽开槽用布尔 `DIFFERENCE` 做出来；偏置宽指挂到 Panda 手指根对象下）。
+5. **绑定之后马上自检**：`V1` 场景里不能有碰撞代理；`V3` 抽查若干帧，Blender 世界位姿要和仿真记录一致（注意四元数 $q$ 与 $-q$ 表示同一旋转）。
 
-## 画质：默认 draft
+---
 
-成片是给工程审阅看动作和干涉的，不是展示片。`render_frames.py` 有三个档位，只改采样和分辨率，不动机位、灯光、材质：
+## 二、 从“仿真白盒”到“真实感实验室”：六步 Look-Dev 流程
+
+物理仿真阶段遵循「只建接触与运动学必需几何」的极简原则，因此刚完成位姿绑定的 `render_scene.blend` 往往是缺乏环境细节的“白盒实验室”（左后方冰箱与试剂柜为白色占位块、台面无理化板质感、墙面无供电插座与线槽、透明门存在折射重影）。我们在 `07-render` 阶段通过以下 **六步 Look-Dev 流程** 完成真实感升级：
+
+### 三机位演进对比（仿真白盒 $\rightarrow$ 2D 风格锚定图 $\rightarrow$ Blender Cycles 最终渲染）
+
+#### 1. 全景机位（`01_overview`，13 mm 超广角俯视）
+<div class="wb-grid2">
+<figure class="wb-figure"><img :src="$withBase('/img/pixal3d/overview_before.webp')" alt="全景：白盒底图" /><figcaption><b>① 仿真白盒底图</b>：冰箱与试剂柜为纯白方块，铝型材与台面缺乏金属/理化板质感，工作站透明前门因厚板折射出现双像重影。</figcaption></figure>
+<figure class="wb-figure"><img :src="$withBase('/img/pixal3d/overview_real.webp')" alt="全景：2D 真实感风格锚定图" /><figcaption><b>② 2D 真实感锚定图（Real 系列）</b>：锁死 Blender 结构底图透视，用生图模型生成目标工业洁净室质感，明确深灰理化板、4040 铝型材护栏、顶部蓝波纹集气罩与玻璃试剂柜的视觉标准。</figcaption></figure>
+</div>
+<figure class="wb-figure"><img :src="$withBase('/img/pixal3d/overview_after.webp')" alt="全景：Blender Cycles 最终渲染" /><figcaption><b>③ Blender 5.4 Cycles 最终渲染（01_overview_pixal3d）</b>：合入透明玻璃门试剂柜（内摆 16 个 Pixal3D 试剂瓶）、4°C 实验冰箱、同轴蓝色排风波纹管、右侧 4040 铝型材安全护栏、深灰理化板台面、零重影薄壁玻璃与低调的 <code>LUMEN TECH / LAB WORLD</code> 品牌标识。</figcaption></figure>
+
+#### 2. 移液工作站近景（`02_workstation`，22 mm 标准近景）
+<div class="wb-grid2">
+<figure class="wb-figure"><img :src="$withBase('/img/pixal3d/workstation_before.webp')" alt="工作站：白盒底图" /><figcaption><b>① 仿真白盒底图</b>：前门 `Alpha=0.28 + Transmission=0.96 (IOR=1.06)` 导致直穿光线与折射光线叠加，箱内移液头、孔板与立柱出现严重横向重影，且门外机械臂倒映在玻璃门上。</figcaption></figure>
+<figure class="wb-figure"><img :src="$withBase('/img/pixal3d/workstation_real.webp')" alt="工作站：2D 真实感风格锚定图" /><figcaption><b>② 2D 真实感锚定图（Real 系列）</b>：目标为高通透无重影聚碳酸酯前门、深灰耐酸碱理化板台面、阳极氧化铝门框、箱内顶置补光以及移液头黄绿状态贴标。</figcaption></figure>
+</div>
+<figure class="wb-figure"><img :src="$withBase('/img/pixal3d/workstation_after.webp')" alt="工作站：Blender Cycles 最终渲染" /><figcaption><b>③ Blender 5.4 Cycles 最终渲染（02_workstation_pixal3d）</b>：改用零折射薄壁建筑玻璃 Shader（97% Transparent + 3% Glossy）彻底根除双像重影与机械臂倒影；补充箱内 45 W 顶置 LED 补光、隐藏烘焙静态吸头 <code>v03_tip_200ul</code>，并在深灰台面与眉板加入克制的激光镭雕与丝印。</figcaption></figure>
+
+#### 3. 离心机与开盖器近景（`03_centrifuge`，22 mm 朝南近景）
+<div class="wb-grid2">
+<figure class="wb-figure"><img :src="$withBase('/img/pixal3d/centrifuge_before.webp')" alt="离心机：白盒底图" /><figcaption><b>① 仿真白盒底图</b>：南墙与台下完全空白，缺少供电线槽、插座、插头、设备连接线、台下 UPS 电源盒与废料桶。</figcaption></figure>
+<figure class="wb-figure"><img :src="$withBase('/img/pixal3d/centrifuge_real.webp')" alt="离心机：2D 真实感风格锚定图" /><figcaption><b>② 2D 真实感锚定图（Real 系列）</b>：明确南墙水平 PVC 线槽、双联插座、自然垂落的黑色橡胶电缆、台下 230V UPS 电源盒与右侧不锈钢内胆废料桶的工业细节。</figcaption></figure>
+</div>
+<figure class="wb-figure"><img :src="$withBase('/img/pixal3d/centrifuge_after.webp')" alt="离心机：Blender Cycles 最终渲染" /><figcaption><b>③ Blender 5.4 Cycles 最终渲染（03_centrifuge_pixal3d）</b>：切除插座 GLB 底部烘焙的断头残线，补齐 3D 模压黑插头护套与设备后壁防水接头，让 4 阶 NURBS 悬链线从插头连续延伸深入离心机、开盖器与观察站机壳内部。</figcaption></figure>
+
+---
+
+### Step 1：结构底图导出 + 2D AI 概念图锚定质感（Style Lock）
+
+不要在没有视觉锚点的情况下盲目调 Blender 材质节点。标准做法是：
+1. 先按分期镜头（全景、工作站近景、离心机近景）从 Blender 导出 3 张白盒结构图；
+2. 将白盒结构图作为几何约束输入生图模型，在**严格锁死设备位置、机身比例与相机透视**的前提下生成照片级工业洁净室参考图（`*_real.webp`）；
+3. 对照 `*_real.webp` 列出四张可执行清单：**① 基底 PBR 材质表**、**② 非接触 3D 陈设小件表**、**③ 机电走线与工业贴标表**、**④ 局部补光与色调映射参数**。
+
+### Step 2：参数化硬表面 + AI 3D 生成资产（Pixal3D）混合布景
+
+遵循「规整大箱体与透明门用 Blender 参数化建模，异形机电小件与柜内瓶罐用 Colab `Pixal3D` 生成」的分工原则（完整五阶段零浪费 SOP 与修模算法见 **[Colab 3D 生成与 Blender 修模](/cases/pixal3d-dressing)**）：
+- **双门透明玻璃试剂柜**：用 Blender 参数化构建笔直白烤漆柜壳、三层隔板与透明玻璃门，内部将修模后的 `clean_reagent_bottle_clean.glb` 通过 `bottle_proto.copy()`（共享网格与 2K 贴图，零额外显存）实例化 16 瓶摆上隔板；
+- **非接触机电小件**：4°C 实验冰箱、台下 230V UPS 电源盒、不锈钢废料桶、顶部集气罩与墙面双联插座经 `2 mm` 空间容差去碎块和最小包围盒体积（Min-Volume OBB）自动调平后，按真实米制尺寸归一并命名为 `VIS_pixal3d__*` 放入独立的 `pixal3d_dressing` Collection，**不打刚体关键帧、不带 `COL_` 前缀**，确保 `V1` 与 `V3` 验证门零冲突。
+
+### Step 3：工业级 PBR 材质体系与「零重影薄壁建筑玻璃 Shader」
+
+#### 1. 工业洁净室四大核心材质配方
+| 材质名称 | 适用对象 | 核心 Principled BSDF / 节点参数 | 视觉作用 |
+|---|---|---|---|
+| **深灰耐酸碱理化板** (`MAT_PHENOLIC`) | 工作站内台面、离心机台面、观察站台面、护栏内台面 | `Base Color=(0.16, 0.17, 0.18)`，`Roughness=0.28`，`Coat Weight=0.25`，`Coat Roughness=0.18` | 压暗台面明度，与白色机械臂、透明孔板和银色铝型材拉开清晰层次 |
+| **6063 阳极氧化铝型材** (`MAT_ALU_4040`) | 实验台腿与横梁、工作站外框架、右侧 4040 安全护栏 | `Base Color=(0.78, 0.80, 0.83)`，`Metallic=0.88`，`Roughness=0.26` | 还原工业铝型材的柔和拉丝金属光泽，配合哑光黑角码形成真实装配感 |
+| **哑光黑压铸铝/工业橡胶** (`MAT_GUSSET_BLK`) | 4040 角码、地脚、门把手、合页、拖链、插头与电源线 | `Base Color=(0.04, 0.04, 0.045)`，`Metallic=0.15`，`Roughness=0.42` | 提供高对比度结构锚点，避免全白/全银场景发飘 |
+| **斑点环氧自流平地坪** (`MAT_FLOOR_EPOXY`) | 洁净室地面 (`VIS_room__floor`) | `Noise Texture(Scale=380, Detail=6)` 经 `ColorRamp` 映射 `(0.66, 0.68, 0.70)` 至 `(0.76, 0.78, 0.80)`，`Roughness=0.20–0.28` | 消除纯色平面的塑料感，呈现洁净室地坪特有的微颗粒漫反射 |
+
+#### 2. 根治透明玻璃门“双像重影”的光学原理与节点代码
+::: danger 核心踩坑：为什么有厚度的透明门会出现“重影（Double-Image Ghosting）”？
+在第一版渲染中，工作站前门（`front_door_clear_-1/1`）和右侧护栏亚克力板同时设置了 `Alpha = 0.28`、`Transmission Weight = 0.96` 与 `IOR = 1.06`。在 Cycles 路径追踪器中，这意味着每根穿过玻璃门的光线被拆成两部分：
+- **72% 的能量**走 `1 - Alpha` 的 `Transparent BSDF` 通道（等效 `IOR = 1.0`，**完全不发生折射偏折，沿直线穿透**）；
+- **28% 的能量**走 `Alpha` 加权的 `Transmission` 通道（在进出有厚度的门板时按 `IOR = 1.06` 发生斯涅尔折射偏折，在 `0.3–0.6 m` 观察距离下**横向平移约 `1.5–2.5 cm`**）。
+
+两束光线在相机传感器上叠加后，门后方的移液通道、孔板和铝型材立柱就会出现一个**横向错位 `~2 cm`、不透明度 `28%` 的双重曝光鬼影**！同时，`Principled BSDF` 的菲涅尔镜面反射还会把门外的白色 Panda 机械臂映在玻璃门中央。
+:::
+
+**标准解法（零折射薄壁建筑玻璃 `configure_thin_glass_material`）**：对场景中所有透明观察窗、聚碳酸酯防护门、亚克力挡板和试剂柜玻璃门，弃用厚介质折射，改用 **`Mix Shader(fac=0.03)` 混合 `97% Transparent BSDF`（零折射直线穿透）与 `3% Glossy BSDF (Roughness=0.03)`**，并检查将工作站侧透板（`left_clear_panel`、`rear_clear_panel`、`right_upper_clear_panel`）修正为同一材质，同时隐藏移液头 `v03_Z_joint` 上烘焙的静态吸头 `v03_tip_200ul`（避免与动态吸头 `VIS_tip_0..7` 重叠）：
+
+```python
+def configure_thin_glass_material(mat_name, tint=(0.96, 0.98, 1.00), reflection_weight=0.03, rough=0.03):
+    """零折射薄壁建筑玻璃 Shader：97% 直线透明穿透 + 3% 锐利边缘高光，100% 根除厚板折射双影。"""
+    m = bpy.data.materials.get(mat_name) or bpy.data.materials.new(mat_name)
+    m.use_nodes = True
+    nt = m.node_tree
+    nt.nodes.clear()
+    out = nt.nodes.new("ShaderNodeOutputMaterial")
+    mix = nt.nodes.new("ShaderNodeMixShader")
+    transp = nt.nodes.new("ShaderNodeBsdfTransparent")
+    glossy = nt.nodes.new("ShaderNodeBsdfGlossy")
+    transp.inputs["Color"].default_value = (*tint, 1.0)
+    glossy.inputs["Color"].default_value = (1.0, 1.0, 1.0, 1.0)
+    glossy.inputs["Roughness"].default_value = rough
+    mix.inputs["Fac"].default_value = reflection_weight
+    nt.links.new(transp.outputs["BSDF"], mix.inputs[1])
+    nt.links.new(glossy.outputs["BSDF"], mix.inputs[2])
+    nt.links.new(mix.outputs["Shader"], out.inputs["Surface"])
+    return m
+```
+
+### Step 4：连续三维悬链线走线与消除「断头电线」伪影
+
+当把 AI 生成的墙面插座（`clean_wall_socket_clean.glb`）与程序化生成的三维电缆结合时，极易出现三种“电线看起来断掉了”的穿帮现象：
+1. **插座下方出现“白色断口”**：单图 3D 生成的插座模型在底部 `4.8 cm`（`local z < 0.048`）处把参考图里的两截短电线与白墙背景一起烘焙成了凸出网格（前端面 `y = -1.420`），挡在了程序化黑色电缆（`y = -1.425`）正前方，从相机看过去就像插头和电线之间断开了一截白墙；
+2. **设备后方露出“悬空断头”**：如果电缆终点只写到设备包围盒外侧几厘米（例如停在 `y = -0.94` 而离心机后壁在 `y = -0.85`），高位俯视镜头会清晰拍到电线停在半空；
+3. **切墙镜头底边截断**：全景镜头（`01_overview`）隐藏南墙（`VIS_room__wall_south`）时，若南墙上的插座和跨墙电线未同步隐藏，电线就会向画面底边伸向虚空被相机裁剪面截断。
+
+**四步根治方案**：
+1. **用 `bmesh.ops.bisect_plane` 切除插座 GLB 底部烘焙残线**：导入 `clean_wall_socket_clean.glb` 后，沿局部高度 `z = 0.048 m` 水平切一刀并清除下半部分（`clear_inner=True`），只保留干净的白色双联面板；
+2. **补齐 3D 模压黑插头护套与设备后壁防水接头**：在每个插孔正前方（`y = -1.416`）放置 3D 黑色插头体（`plug_head`）与应力释放护套（`plug_boot`），并在离心机、开盖器、观察站后壁安装黑色防水电缆接头（`rear_gland`）；
+3. **4 阶 NURBS 悬链线两端深插**：曲线起点置于黑色插头护套中心（`y = -1.414, z = 1.078`），经过台面上方控制点自然垂落，终点穿过后壁防水接头**深入设备机壳内部 `5–8 cm`**（如离心机内部 `y = -0.76`）；
+4. **随分期镜头联动显隐**：将南北墙上的线槽、插座、插头与电缆分别归入 `SOUTH_WALL_OBJS` 与 `NORTH_WALL_OBJS`，随相机朝向同步给 `hide_render` 打 `CONSTANT` 关键帧。
+
+```python
+# 切除 clean_wall_socket_clean.glb 底部 4.8 cm 烘焙的断头残线与白边遮挡
+bm = bmesh.new()
+bm.from_mesh(ws_obj.data)
+bmesh.ops.bisect_plane(
+    bm,
+    geom=bm.verts[:] + bm.edges[:] + bm.faces[:],
+    plane_co=(0.0, 0.0, 0.048),
+    plane_no=(0.0, 0.0, 1.0),
+    clear_inner=True,
+    clear_outer=False,
+)
+bm.to_mesh(ws_obj.data)
+bm.free()
+```
+
+### Step 5：低调克制的工业品牌标识（`LUMEN TECH` & `LAB WORLD`）
+
+真实工业设备上的品牌字样讲究克制、耐看，绝不用高饱和度大字。我们按基底材质分为两类工艺：
+- **浅色烤漆面板丝印（`MAT_BRAND_SILKSCREEN`）**：用于工作站顶眉板右侧、下柜门、后龙门横梁、移液头前盖、Panda 导轨立柱及 4°C 冰箱门。采用哑光深石板灰（`Base Color = (0.20, 0.22, 0.25), Roughness = 0.48`），三维字体挤出厚度仅 `0.4–0.5 mm`，紧贴面板表面；
+- **深灰理化板激光镭雕（`MAT_BRAND_LASER_ETCH`）**：用于工作站内部深灰台面左前角、离心机实验台后沿与观察站顶盖。采用半金属浅银灰（`Base Color = (0.56, 0.58, 0.61), Metallic = 0.65, Roughness = 0.32`），挤出 `0.3 mm`，在顶光下呈现细腻的激光蚀刻光泽；
+- **运动与开盖部件避坑**：位于移动关节上的标识（如移液头 `v03_Z_joint`、导轨立柱 `ROOT_rail_carriage`）必须绑定为对应刚体的子对象并设 `matrix_parent_inverse = Matrix.Identity(4)`；而**在会大幅翻转开启的部件（如期 3 打开 $-100^\circ$ 的离心机顶盖）上严禁放置静态水平文字**，否则开盖时文字会悬空浮在转子腔上方。
+
+### Step 6：箱内补光、AgX 色调映射与分期镜头联动
+
+1. **解决“白墙过曝 vs 箱内欠曝”矛盾**：洁净室大面积白墙与白色机身在常规曝光下极易死白，而工作站内部的深灰理化板台面又容易偏暗。做法是：在工作站内部顶板下方增加一盏 `45 W` 矩形面光（`VIS_dress__ws_interior_led`，尺寸 `0.85 × 0.45 m`）专门照亮箱内台面与孔板，全局色彩管理采用 **`AgX` View Transform + `Exposure = -0.65`**，让高光柔和过渡、暗部层次分明。
+2. **分期固定机位与墙面/线缆联动硬切**：全程 27,358 帧只装配一次，按 `camera_segments.json` 的四期边界设置固定镜头，并在切机位的同一帧同步切换南北墙及其附属插座线缆的 `hide_render` 状态（使用 Blender 5 分层动作 API 将相机与显隐曲线全部设为 `CONSTANT` 插值）：
+
+| 分期镜头 | 起始帧 | 相机位置 `pos` | 目标点 `target` | 焦距 | 显隐联动状态 |
+|---|---|---|---|---|---|
+| **期 1 全景** | `0` | `[1.70, -1.42, 2.40]` | `[1.70, 0.25, 0.80]` | `13 mm` | 隐藏南墙及南墙线缆，显示北墙 |
+| **期 2 工作站近景** | `3225` | `[1.30, 0.30, 1.45]` | `[1.45, 1.00, 0.93]` | `22 mm` | 隐藏南墙及南墙线缆，显示北墙 |
+| **期 3 离心机/开盖器近景** | `6843` | `[0.70, 0.75, 2.35]` | `[0.70, -0.60, 0.80]` | `22 mm` | **显示南墙及南墙插座线缆**，隐藏北墙 |
+| **期 4 全景** | `17853` | `[1.70, -1.42, 2.40]` | `[1.70, 0.25, 0.80]` | `13 mm` | 隐藏南墙及南墙线缆，显示北墙 |
+
+---
+
+## 三、 画质档位：默认 draft 审阅，按需高画质展示
+
+`render_frames.py` 提供三个档位，只改采样和分辨率，不动机位、灯光与材质：
 
 | 档位 | 设置 | 实测吞吐 | 什么时候用 |
 |---|---|---|---|
-| `draft`（默认） | Cycles OptiX 720p、16 spp、自适应采样 + OptiX 降噪 | 约 0.55–1 s / 帧 | 工程审阅 |
-| `final` | 1080p、128 spp | 约 13.5 s / 帧 | 你明确要展示级画质时 |
-| `eevee` | 最快 | — | 玻璃门会渲成不透明、挡住箱内动作，这类场景不用 |
+| `draft`（默认） | Cycles OptiX 720p、16 spp、自适应采样 + OptiX 降噪 | 约 0.55–1.0 s / 帧 | 工程审阅与全片连跑 |
+| `final` | 1080p、128 spp | 约 13.5 s / 帧 | 明确需要展示级单帧或宣传片段时 |
+| `eevee` | 最快 | — | 透明门与箱内多层折射/透射表现差，本场景不用 |
 
 <div class="wb-grid2">
 <figure class="wb-figure"><img :src="$withBase('/img/slice/cmp_hq450.webp')" alt="final 档位局部" /><figcaption><b>final</b>，第 450 帧局部：玻璃门干净。</figcaption></figure>
@@ -44,13 +184,15 @@ states_30fps.npz → 每个视觉根 = 一个 MuJoCo body → 逐帧写世界位
 <figure class="wb-figure"><img :src="$withBase('/img/slice/cmp_eevee.webp')" alt="eevee 全帧" /><figcaption><b>eevee</b>，同一帧：玻璃门不透明，箱内的动作看不到了。</figcaption></figure>
 </div>
 
-::: warning 教训：一开始就用了展示级画质
-薄切片 01 一开始用 1080p、128 spp，每帧 13–15 s，全片 1621 帧要约 6 h。渲到第 490 帧时用户指出没必要，改成 draft 后每帧约 0.55 s，快了约 25 倍，全片 16.3 min。现在的规则：**先问清成片给谁看，审阅用途一律 draft**；正式开渲前先渲 3–6 帧，测吞吐、调曝光和机位。
+::: warning 教训：先渲关键帧确认 Look-Dev 与机位，再跑全片
+薄切片 01 一开始用 1080p、128 spp，每帧 13–15 s，全片 1621 帧要约 6 h。改成 `draft` 后每帧约 0.55 s，快了约 25 倍。现在的标准规则：**正式开渲全片前，必须先渲 3–4 张分期关键帧（`.webp`），完成玻璃去重影、电线连续性、工业标识与曝光检查后，再启动后台全片渲染**。
 :::
 
-## 收尾和验证门
+---
 
-逐帧写盘，已经存在的帧会跳过，中断后可以接着渲。渲完由收尾脚本编码成片（ffmpeg，libass 叠 ASS 字幕：当前步骤、教学等待的倒计时、计数结果标「模拟数据」），然后跑验证门：
+## 四、 收尾和验证门
+
+逐帧写盘，已经存在的帧会跳过，中断后可以接着渲。渲完由 `render_full.sh finish` 编码成片（`ffmpeg` + `libass` 叠 ASS 字幕：当前步骤、教学等待倒计时、计数结果标「模拟数据」），按各期边界切出分期成片，然后跑验证门：
 
 ```bash
 uv run --extra sim wb gate <项目> render
@@ -58,22 +200,18 @@ uv run --extra sim wb gate <项目> render
 
 | 编号 | 检查 |
 |---|---|
-| V1 | 场景中没有碰撞代理对象 |
+| V1 | 场景中没有碰撞代理对象（`COL_` / `collision` 为 0） |
 | V2 | 帧数 = 仿真时长 × 30（不加速、不跳帧） |
 | V3 | 抽检帧中各刚体的 Blender 世界位姿与仿真记录一致 |
 | V4 | 成片能正常解码，时长与仿真一致（缺 ffprobe 时判 BLOCKED） |
 
-## 踩过的坑
+## 五、 常见踩坑速查
 
-- **Windows 版 Blender 读不到 WSL 的 `/tmp`。** 脚本和中间文件都放在 `/mnt/d` 下。
-- **传给 Windows 版 Blender 的输出目录要用绝对路径。** `wslpath -w` 对相对路径原样返回，Blender 的工作目录是 `C:\`，帧就写到了 `C:\<目录名>`。
-- **Blender 5 的分层动作没有 `action.fcurves`**，要经 `action.layers → strips → channelbags → fcurves` 取；用 `getattr(action, "fcurves", [])` 会静默拿到空列表，插值没改成 CONSTANT，相机分段就在两个机位之间渐变。
-- **收尾脚本死等**：用 `pgrep -f render_frames.py` 判断渲染是否结束，会匹配到父 shell 自己的命令行，永远等不完。按进程名 `blender.exe` 检查。
-- **第一版灯光严重过曝**：沿用了建模预览的灯光，而场景几乎全是白色材质。降到约三分之一、曝光 −0.5 才正常。
-- **机位**：从右前方平视时观察站正好挡在前景。改成右前方高位俯视后，培养箱内部、机械臂和抽屉都能看到。
+- **Windows 版 Blender 读不到 WSL 的 `/tmp` 且管道易挂起**：脚本和中间文件都放在 `/mnt/d` 下；WSL 调用 `blender.exe` 前先 `cd /mnt/d/...` 并附加 `< /dev/null`。
+- **传给 Windows 版 Blender 的输出目录要用绝对路径**：`wslpath -w` 对相对路径原样返回，Blender 的工作目录是 `C:\`，帧会误写到 `C:\<目录名>`。
+- **Blender 5 的分层动作没有 `action.fcurves`**：要经 `action.layers → strips → channelbags → fcurves` 取；用 `getattr(action, "fcurves", [])` 会静默拿到空列表，插值没改成 `CONSTANT`，导致相机分段在两个机位之间漂移渐变。
+- **透明防护门出现双像重影**：`Principled BSDF` 同时开启 `Alpha < 1` 与 `Transmission (IOR > 1)` 会把直穿光线与折射偏移光线叠加成重影；一律改用 `97% Transparent BSDF + 3% Glossy BSDF` 薄壁玻璃节点。
+- **AI 生成插座与手写电缆之间出现断口**：用 `bmesh.ops.bisect_plane` 切掉插座 GLB 底部烘焙的残线与白边，电缆两端分别深入 3D 黑插头护套与设备后壁机壳内部，并随分期镜头同步切换南北墙及附属线缆的 `hide_render`。
+- **收尾脚本死等**：用 `pgrep -f render_frames.py` 判断渲染是否结束会匹配到父 shell 自己的命令行；应按进程名 `blender.exe` 检查。
 
-## 两个项目里的实测
-
-薄切片 01：构建与绑定约 0.3 h，返工 4 次（含画质档位）；全片 1621 帧 draft 档位共 16.3 min，平均 0.6 s / 帧；V1–V4 全部 PASS，成片 54.033 s。全流程实验室期 1：3226 帧、107.5 s，V3 位姿误差为 0。
-
-经验记录原文：`docs/lessons/07-pose-binding-render.md`。
+经验记录原文：`docs/lessons/07-pose-binding-render.md` 与 `docs/lessons/09-pixal3d-colab-scene-dressing.md`。
