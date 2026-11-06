@@ -1,6 +1,6 @@
 ---
 title: 07 位姿绑定与渲染
-description: 把 MuJoCo 记录的刚体位姿逐帧写进 Blender 的视觉根对象，经过六步 Look-Dev 质感与机电细节升级、分期镜头与灯光调校，渲出与仿真等长的真实感成片。
+description: 把 MuJoCo 记录的刚体位姿逐帧写进 Blender 的视觉根对象，经过六步 Look-Dev 与 Blender 侧真实感校准（反照率、灯光、微细节、相机），渲出与仿真等长的真实感成片。
 ---
 
 # 07 位姿绑定与渲染
@@ -167,7 +167,51 @@ bm.free()
 
 ---
 
-## 三、 画质档位：默认 draft 审阅，按需高画质展示
+## 三、 Look-Dev v2：Blender 侧真实感（对照参考图逐项校准）
+
+六步做完后，画面仍然“一眼是 CG”：整体发白发灰、没有明暗层次、材质像塑料、背景是一堵白墙。问题不在模型，而在 Blender 侧的**反照率、灯光、表面微细节、相机**四件事。cell-passaging-lab 用一个脚本 `07-render/lookdev_v2/lookdev_realism.py` 在已绑定的 `render_scene.blend` 上统一升级（另存 `render_scene_lookdev.blend`），刚体位姿逐帧比对误差为 0。
+
+<figure class="wb-figure"><img :src="$withBase('/img/lookdev-v2/compare.webp')" alt="旧渲染 / look-dev v2 / 参考目标图" /><figcaption>同一帧、同一机位：左 旧渲染，中 look-dev v2，右 参考目标图（风格锁定）。</figcaption></figure>
+
+<div class="wb-grid2">
+<figure class="wb-figure"><img :src="$withBase('/img/lookdev-v2/05_hero_robot.webp')" alt="机械臂伸进工作站" /><figcaption>帧 10200：机械臂伸进移液工作站（24 mm、f/2.8）。</figcaption></figure>
+<figure class="wb-figure"><img :src="$withBase('/img/lookdev-v2/06_hero_centrifuge.webp')" alt="离心机近景" /><figcaption>帧 11880：离心机开盖取管（30 mm、f/2.8）。</figcaption></figure>
+</div>
+
+### 1. 先量化，再调
+
+用亮度统计对比参考图：均值、p5 / p50 / p95、削顶比例（>0.98）、饱和度（max−min）、冷暖偏移（B−R）。旧渲染 p50 0.82、饱和度 0.01（几乎纯灰）；参考图 p50 0.57、p95 0.83、饱和度 0.04 且偏冷。每轮改动都看这几个数，不靠肉眼猜曝光。
+
+| 全景机位 | 均值 | p50 | p95 | 削顶 | 饱和度 |
+|---|---|---|---|---|---|
+| 旧渲染 | 0.765 | 0.824 | 0.910 | 0% | 0.010 |
+| look-dev v2 | 0.537 | 0.585 | 0.830 | 0% | 0.037 |
+| 参考目标图 | 0.548 | 0.573 | 0.835 | 0% | 0.040 |
+
+### 2. 四类改动
+
+| 类别 | 做法 | 为什么 |
+|---|---|---|
+| **反照率** | 白漆 0.86–1.0 → 0.70–0.78；白墙 0.9 → 0.60（偏冷）；地面灰底 ≈0.11；理化板 ≈0.035 | 全白场景里只要有纯白反照率，二次反弹就把整张图冲灰 |
+| **灯光** | 删掉 6 盏 1 m 裸面光；加天花板 + 600×600 面板阵列（区域光 + 自发光漫射板），偏冷色温；世界光只留 0.03 | 没有天花板时光往上漏、墙靠世界光提亮，明暗是平的；灯盘出现在台面反射里是强真实感线索 |
+| **表面微细节** | Bevel 着色器倒角高光（白漆 2.5 mm、铝 1.2 mm）；粗糙度噪声；白漆橘皮凹凸 + Coat；地面 Voronoi 颗粒 PVC；理化板细麻点（要细、要低对比，否则像花岗岩）；4040 型材换成 T 槽截面 | 6 面方盒的棱角接不到高光，纯色平面没有“材料感” |
+| **相机与合成** | 按机位段打景深（f/8 / f/4 / f/5.6）和曝光关键帧；AgX + Medium High Contrast；合成加色散、弱 Bloom、暗角，静帧加胶片颗粒 | 真实照片有景深、镜头缺陷和颗粒 |
+
+另外两项环境改动：东墙换成铝框玻璃隔断，后面程序化生成一间邻实验室（围栏工作站、岛台、高柜、风管）；南北墙加服务带、Unistrut 立槽、桥架、线管、压缩空气管；设备上贴程序生成的条码标签和黄色警示三角（运动件上的挂到对应 ROOT 下）。
+
+::: danger 这一轮踩到的三个坑
+- **Fresnel 玻璃变成黑镜子**：薄玻璃用 `Fresnel(1.5)` 混合 Transparent 和 Glossy 时，Fresnel 节点在背面按 1/IOR 计算，掠射角全内反射，整片玻璃发黑。改为 `Fresnel × (1 − Backfacing)`，只让入射面反射。
+- **Bloom 阈值低于场景白**：阈值 1.2 时白墙本身就超过阈值，整张图蒙一层雾。阈值提到 4.0，只让灯盘反射和自发光起辉。
+- **墙用 `hide_render` 隐藏会漏光**：墙一隐藏就既不挡光也不反射。改为把墙组的 hide_render 关键帧转成 `visible_camera` 关键帧；新加的墙面管线共用墙的 action，机位切换时一起对相机隐藏。
+:::
+
+::: tip Blender 5.4 合成器 API
+没有 `scene.node_tree`，也没有 Composite 节点：新建 `CompositorNodeTree` 节点组，`interface.new_socket` 加一个 Image 输出，用 Group Output 收尾，再赋给 `scene.compositing_node_group`。合成树里混合用 `ShaderNodeMix`（RGBA），数学用 `ShaderNodeMath`；Glare、Lens Distortion 等节点的参数都变成了输入插座。颗粒用的是固定噪声图，逐帧不变，只用于静帧；放进成片会像镜头脏了。
+:::
+
+---
+
+## 四、 画质档位：默认 draft 审阅，按需高画质展示
 
 `render_frames.py` 提供三个档位，只改采样和分辨率，不动机位、灯光与材质：
 
@@ -190,7 +234,7 @@ bm.free()
 
 ---
 
-## 四、 收尾和验证门
+## 五、 收尾和验证门
 
 逐帧写盘，已经存在的帧会跳过，中断后可以接着渲。渲完由 `render_full.sh finish` 编码成片（`ffmpeg` + `libass` 叠 ASS 字幕：当前步骤、教学等待倒计时、计数结果标「模拟数据」），按各期边界切出分期成片，然后跑验证门：
 
@@ -205,7 +249,7 @@ uv run --extra sim wb gate <项目> render
 | V3 | 抽检帧中各刚体的 Blender 世界位姿与仿真记录一致 |
 | V4 | 成片能正常解码，时长与仿真一致（缺 ffprobe 时判 BLOCKED） |
 
-## 五、 常见踩坑速查
+## 六、 常见踩坑速查
 
 - **Windows 版 Blender 读不到 WSL 的 `/tmp` 且管道易挂起**：脚本和中间文件都放在 `/mnt/d` 下；WSL 调用 `blender.exe` 前先 `cd /mnt/d/...` 并附加 `< /dev/null`。
 - **传给 Windows 版 Blender 的输出目录要用绝对路径**：`wslpath -w` 对相对路径原样返回，Blender 的工作目录是 `C:\`，帧会误写到 `C:\<目录名>`。
