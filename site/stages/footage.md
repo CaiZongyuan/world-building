@@ -160,6 +160,10 @@ description: 位姿绑定和 look-dev 做完之后，怎么把一段 15 分钟�
 - 画面里的每个动作都来自仿真位姿，不手动打关键帧。look-dev 做完要比对刚体位姿，误差必须是 0。
 - 墙用 `visible_camera` 隐藏，不用 `hide_render`。
 - 挂在刚体上的视觉件（夹爪指垫、治具）要和碰撞件出自同一份设计参数。V3 只比对刚体根，查不出根下零件的错位。cell-passaging-lab 的宽指视觉件拷自一个旧 `.blend`，仿真里指垫贴住了孔板，画面里却离板 5 cm，看起来像隔空把板吸过来。现在渲染装配时按 `design.json` 现建指垫，开渲前由 V5 量每次搬运的手指间隙。
+- 被夹的透明件要有颜色提示。孔板全透明，夹在黑色指垫里几乎看不见，看着像夹了个空。孔板按高度分两段上材质：板底 6 mm（裙边和孔底）是不透明的蓝色塑料，上面保持透明；侧面贴条码标签。只改材质，几何和碰撞都不变。
+
+<figure class="wb-figure"><img :src="$withBase('/img/footage/plate_style.webp')" alt="孔板外观三版对比" /><figcaption>孔板外观三版：A 透明、B 蓝色底托、C 橙色底托，B、C 侧面贴条码标签。镜头依次是夹板进工作站（局部放大）、同一时刻近景、工作站台面。用户选了 B。</figcaption></figure>
+
 - 改动只在局部（比如手部）时，不必全部重渲：`footage/finger_visibility.py --delete` 只删看得到这个部位的帧。保留的帧和新场景重渲的结果逐像素比对，平均差约 1/255。
 
 <figure class="wb-figure"><img :src="$withBase('/img/footage/grip_fix.webp')" alt="夹爪修复前后" /><figcaption>同一机位、同一帧。左：宽指视觉件是旧版，指垫离板 51–62 mm；右：按仿真参数现建，指垫贴住板端（−0.03…+0.06 mm）。下：修后近景。</figcaption></figure>

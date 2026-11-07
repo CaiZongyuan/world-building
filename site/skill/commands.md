@@ -42,8 +42,8 @@ python 06-simulation/run_full.py [k]
 
 # 渲染：装配、陈设、look-dev、量夹持间隙（V5）、规划机位与录制倍速、渲素材、拼剪辑版并跑门（可分步，已存在的帧会跳过）
 bash 07-render/render_full.sh [build|enrich|lookdev|grasp|plan|render|finish]
-# 改了手部这类局部外观后，只删看得到该部位的素材帧再续渲
-python 07-render/footage/finger_visibility.py --delete
+# 改了手部或孔板这类局部外观后，只删看得到该部位的素材帧再续渲
+python 07-render/footage/finger_visibility.py [--part fingers|plates] --delete
 # 只渲一轮素材任务（pass1 = 剪辑要用的帧，pass2 = 全部素材）
 bash 07-render/footage/render_pass.sh jobs_pass1.json draft
 # 按剪辑表拼片 → 07-render/videos/<name>_draft.mp4
