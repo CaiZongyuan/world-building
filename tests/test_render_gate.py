@@ -55,3 +55,31 @@ def test_render_footage_complete_passes_v4a(tmp_path):
 def test_render_footage_missing_frame_fails(tmp_path):
     r = run_gate(make_footage(tmp_path, have_all=False), "render")
     assert "V4a 素材库完整（按录制倍速，帧号在仿真范围内）" in {c.name for c in r.checks if c.status == "FAIL"}
+
+
+V5 = "V5 夹持看得见接触（每次搬运，手指到被夹物 ≤ 门限）"
+
+
+def _grasp_report(p, gaps):
+    ev = [{"t_s": [i, i + 1], "bodies": ["plate"], "max_gap_mm": g, "min_gap_mm": g} for i, g in enumerate(gaps)]
+    (p / "07-render" / "grasp_report.json").write_text(json.dumps(
+        {"events": ev, "n_events": len(ev), "max_gap_mm": max(gaps), "min_gap_mm": min(gaps)}))
+
+
+def test_render_grasp_touching_passes_v5(tmp_path):
+    p = make_footage(tmp_path)
+    _grasp_report(p, [0.2, -0.05, 0.5])
+    st = {c.name: c.status for c in run_gate(p, "render").checks}
+    assert st[V5] == "PASS"
+
+
+def test_render_grasp_gap_fails_v5(tmp_path):
+    p = make_footage(tmp_path)
+    _grasp_report(p, [0.2, 52.0])          # 视觉指垫离板 5 cm：仿真夹住、画面隔空
+    st = {c.name: c.status for c in run_gate(p, "render").checks}
+    assert st[V5] == "FAIL"
+
+
+def test_render_grasp_missing_report_not_run(tmp_path):
+    st = {c.name: c.status for c in run_gate(make_footage(tmp_path), "render").checks}
+    assert st[V5] == "NOT_RUN"

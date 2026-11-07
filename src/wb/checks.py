@@ -390,6 +390,28 @@ def _check_footage(stage_dir: Path, plan_f: Path, rep: dict) -> list[Check]:
     return checks
 
 
+def _check_grasp(stage_dir: Path, th: dict) -> Check:
+    """V5 夹持看得见接触：grasp_report.json（check_grasp.py 在渲染用的 .blend 上量出）里每次搬运，
+    左右手指视觉网格到被夹物视觉网格的距离 ≤ V5_grip_gap_mm，穿入不超过同一数值。
+    仿真夹住了、画面上隔空，说明视觉件与碰撞件不一致。报告比渲染场景旧就算过期。"""
+    import json
+
+    name = "V5 夹持看得见接触（每次搬运，手指到被夹物 ≤ 门限）"
+    rep_f, blend = stage_dir / "grasp_report.json", stage_dir / "render_scene_lookdev.blend"
+    if not rep_f.is_file():
+        return Check(name, NOT_RUN, "缺少 grasp_report.json（运行 render_full.sh grasp）")
+    if blend.is_file() and rep_f.stat().st_mtime < blend.stat().st_mtime:
+        return Check(name, FAIL, "grasp_report.json 比 render_scene_lookdev.blend 旧，需重跑", ["07-render/grasp_report.json"])
+    rep = json.loads(rep_f.read_text(encoding="utf-8"))
+    tol = th.get("V5_grip_gap_mm", 1.0)
+    bad = [e for e in rep["events"] if e["max_gap_mm"] is None or e["max_gap_mm"] > tol or e["min_gap_mm"] < -tol]
+    ok = rep["n_events"] > 0 and not bad
+    worst = "；".join(f"{e['t_s'][0]}–{e['t_s'][1]} s {'+'.join(e['bodies'])} {e['max_gap_mm']} mm" for e in bad[:4])
+    return Check(name, PASS if ok else FAIL,
+                 f"{rep['n_events']} 次搬运，间隙 {rep['min_gap_mm']}…{rep['max_gap_mm']} mm，门限 ±{tol} mm"
+                 + (f"；超限：{worst}" if bad else ""), ["07-render/grasp_report.json"])
+
+
 # ---------------------------------------------------------------- 渲染
 @stage_check("render")
 def check_render(stage_dir: Path) -> list[Check]:
@@ -413,6 +435,7 @@ def check_render(stage_dir: Path) -> list[Check]:
                         f"位置 {rep['v3_max_pos_err_m']:.2e} m，姿态 {rep['v3_max_rot_err_rad']:.2e} rad", ev))
     plan_f = stage_dir / "footage" / "footage_plan.json"
     if plan_f.is_file():
+        checks.append(_check_grasp(stage_dir, th))
         checks += _check_footage(stage_dir, plan_f, rep)
         return checks
     mp4 = stage_dir / "film.mp4"

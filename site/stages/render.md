@@ -270,6 +270,7 @@ uv run --extra sim wb gate <项目> render
 | V3 | 抽检帧中各刚体的 Blender 世界位姿与仿真记录一致 |
 | V4a | 多机位素材库完整：每个机位按录制倍速要录的帧都已渲出（有 `footage/footage_plan.json` 的项目） |
 | V4b | 剪辑版能解码，帧数与剪辑表记录一致（缺 ffprobe 时判 BLOCKED） |
+| V5 | 每次搬运，画面里两根手指到被夹物的距离在 ±1 mm 内（有素材规划的项目；`check_grasp.py` 在渲染用的场景上量） |
 | V4 | 老项目（没有素材规划）：全长成片 `film.mp4` 能解码，时长与仿真一致 |
 
 ## 七、 常见踩坑速查

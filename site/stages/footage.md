@@ -23,13 +23,16 @@ description: 位姿绑定和 look-dev 做完之后，怎么把一段 15 分钟�
 | 步骤 | 做什么 | 脚本（项目 `07-render/` 下） | 完成判据 |
 |---|---|---|---|
 | build | 装配：每个视觉根对应一个 MuJoCo body，逐帧写位姿 | `build_render_scene.py` | `binding_report.json` 里 V1、V3 通过 |
-| camera | 按期设机位关键帧；look-dev 的景深、曝光分段和墙组分组都按这些段来 | `set_camera_segments.py` | 关键帧插值全是 `CONSTANT` |
-| lookdev | 真实感：材质、灯光、背景、贴花、合成 | `lookdev_v2/lookdev_realism.py` | 亮度统计对齐参考图；刚体位姿差 = 0 |
+| enrich | 场景陈设：Pixal3D 生成的冰箱、试剂柜、风管、插座，加上工作站内部、台面、地坪、型材、线槽的细节；同时按期打机位和墙组隐藏关键帧 | `05-modelling/pixal3d_exp/enrich_scene_pixal3d.py`（读 build 出的白盒 `render_scene_whitebox.blend`） | 场景里有 `pixal3d_dressing` 集合；关键帧插值全是 `CONSTANT` |
+| lookdev | 真实感：材质、灯光、背景、贴花、合成 | `lookdev_v2/lookdev_realism.py` | 亮度统计对齐参考图；刚体位姿差 = 0；报告里材质数、分段数与上一版一致 |
+| grasp | 量每次搬运时，画面里两根手指到被夹物的距离 | `check_grasp.py` → `grasp_report.json` | V5：全部在 ±1 mm 内，不过就不往下渲 |
 | plan | 按“哪里在动”算机位时间窗和录制倍速，生成渲染任务 | `footage/plan_footage.py`、`footage/make_jobs.py` | `footage_plan.json` 每个机位都有窗口和倍速分段 |
 | render | pass1 渲剪辑表用到的帧，pass2 渲全部素材 | `footage/render_pass.sh` → `render_footage.py` | 已存在的帧跳过，可以中断续跑 |
 | finish | 按剪辑表拼片，跑验证门 | `edits/make_edit.py`、`wb gate` | V4a 素材完整、V4b 剪辑版帧数对得上 |
 
-一条命令跑完：`bash 07-render/render_full.sh`；只跑其中几步：`bash 07-render/render_full.sh plan render finish`。
+一条命令跑完：`bash 07-render/render_full.sh`；只跑其中几步：`bash 07-render/render_full.sh plan render finish`。`camera` 步保留为可选，陈设步会重新打一遍机位关键帧。
+
+凡是改场景的脚本都要写进这张表和 `render_full.sh`。cell-passaging-lab 的陈设步曾经是手动跑的，按脚本从零重建后，台面变成不锈钢，地坪和墙成了白盒；look-dev 报告里材质数从 80 降到 59，这才发现漏了一步。
 
 ---
 
@@ -156,6 +159,10 @@ description: 位姿绑定和 look-dev 做完之后，怎么把一段 15 分钟�
 **场景与动作**
 - 画面里的每个动作都来自仿真位姿，不手动打关键帧。look-dev 做完要比对刚体位姿，误差必须是 0。
 - 墙用 `visible_camera` 隐藏，不用 `hide_render`。
+- 挂在刚体上的视觉件（夹爪指垫、治具）要和碰撞件出自同一份设计参数。V3 只比对刚体根，查不出根下零件的错位。cell-passaging-lab 的宽指视觉件拷自一个旧 `.blend`，仿真里指垫贴住了孔板，画面里却离板 5 cm，看起来像隔空把板吸过来。现在渲染装配时按 `design.json` 现建指垫，开渲前由 V5 量每次搬运的手指间隙。
+- 改动只在局部（比如手部）时，不必全部重渲：`footage/finger_visibility.py --delete` 只删看得到这个部位的帧。保留的帧和新场景重渲的结果逐像素比对，平均差约 1/255。
+
+<figure class="wb-figure"><img :src="$withBase('/img/footage/grip_fix.webp')" alt="夹爪修复前后" /><figcaption>同一机位、同一帧。左：宽指视觉件是旧版，指垫离板 51–62 mm；右：按仿真参数现建，指垫贴住板端（−0.03…+0.06 mm）。下：修后近景。</figcaption></figure>
 
 **画质**
 - 透明耗材（孔板、吸头、离心管、液层）和门窗玻璃一样，用零折射薄层：Transparent 加正面 Fresnel 反射。低采样下，折射透射会出“碎冰”闪点。
@@ -195,5 +202,6 @@ description: 位姿绑定和 look-dev 做完之后，怎么把一段 15 分钟�
 | V3 | 抽检帧中各刚体的 Blender 世界位姿与仿真一致 |
 | V4a | 素材库完整：每个机位按录制倍速要录的帧都已渲出，帧号在仿真范围内 |
 | V4b | 剪辑版能解码，帧数与剪辑表记录一致 |
+| V5 | 每次搬运，画面里两根手指到被夹物的距离在 ±1 mm 内（`grasp_report.json` 要比渲染场景新） |
 
-V1–V3 保证画面里的动作就是仿真的动作，这是物理保真的核心，没有改。V4 原来检查的是“全长、单机位、不跳帧的成片”。现在需求变了，改成按录制倍速出多机位素材，所以 V4 跟着需求换成了素材库与剪辑版的检查。没有 `footage/footage_plan.json` 的老项目，仍按全长成片检查。
+V1–V3 保证画面里的动作就是仿真的动作，这是物理保真的核心，没有改。V5 补上了 V3 管不到的地方：刚体根的位姿对，不代表挂在根下的零件和仿真里的碰撞件一致。V4 原来检查的是“全长、单机位、不跳帧的成片”。现在需求变了，改成按录制倍速出多机位素材，所以 V4 跟着需求换成了素材库与剪辑版的检查。没有 `footage/footage_plan.json` 的老项目，仍按全长成片检查。

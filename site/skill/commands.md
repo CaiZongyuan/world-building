@@ -40,15 +40,17 @@ uv run --extra sim pytest          # 每道门都有正例和负例夹具（test
 # 四期接力连跑（每期接上一期的完整状态），可从第 k 期续跑
 python 06-simulation/run_full.py [k]
 
-# 渲染：装配、按期设机位、look-dev、规划机位与录制倍速、渲素材、拼剪辑版并跑门（可分步，已存在的帧会跳过）
-bash 07-render/render_full.sh [build|camera|lookdev|plan|render|finish]
+# 渲染：装配、陈设、look-dev、量夹持间隙（V5）、规划机位与录制倍速、渲素材、拼剪辑版并跑门（可分步，已存在的帧会跳过）
+bash 07-render/render_full.sh [build|enrich|lookdev|grasp|plan|render|finish]
+# 改了手部这类局部外观后，只删看得到该部位的素材帧再续渲
+python 07-render/footage/finger_visibility.py --delete
 # 只渲一轮素材任务（pass1 = 剪辑要用的帧，pass2 = 全部素材）
 bash 07-render/footage/render_pass.sh jobs_pass1.json draft
 # 按剪辑表拼片 → 07-render/videos/<name>_draft.mp4
 python 07-render/edits/make_edit.py 07-render/edits/main_v1.json draft
 
-# 进展截图：在已装配的场景上换机位渲关键帧，再拼成带说明的 WebP
-python 07-render/render_shots.py ...
+# 进展截图、修复前后对比：在渲染场景上换一个临时机位渲几帧（渲染设置与素材相同），再拼成带说明的 WebP
+blender -b 07-render/render_scene_lookdev.blend --python 07-render/render_shots.py -- <输出目录> <帧列表> '<相机 JSON>'
 python progress/make_sheet.py ...
 ```
 
