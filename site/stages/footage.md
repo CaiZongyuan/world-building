@@ -143,6 +143,8 @@ description: 位姿绑定和 look-dev 做完之后，怎么把一段 15 分钟�
 
 渲染顺序：**先渲剪辑表要用的帧（pass1），先出片；再补齐全部素材（pass2）**。已经存在的帧会跳过，随时中断、随时续跑。
 
+<figure class="wb-figure"><img :src="$withBase('/img/footage/draft_frames.webp')" alt="draft 档位测试帧" /><figcaption>draft 档位（720p、16 spp、OIDN）在三个机位段各抽的测试帧，标了帧号、期、工艺步骤和每帧耗时。开渲之前先看这样一张总览。</figcaption></figure>
+
 ::: tip 换了外观，素材要重渲
 渲染脚本靠“文件已存在”判断要不要跳过。改了材质、灯光、贴花之后，旧外观的素材帧要先删掉，否则会被当成已完成。
 :::
@@ -170,6 +172,10 @@ description: 位姿绑定和 look-dev 做完之后，怎么把一段 15 分钟�
 - 机械臂外壳保持光滑白壳加清漆（粗糙度 0.24、清漆 0.35）。试过缎面（0.38 和 0.48、不加清漆），用户比较后仍选原版。
 - 贴纸增加真实感：底座两侧“注意 CAUTION”标签、底座前面铭牌、肩部和前臂的夹手危险三角、前臂资产条码。
 - 贴纸位置用射线在外壳的平坦区上找，贴片挂在对应连杆上随动，加 Subdivision（simple）和 Shrinkwrap 贴合曲面。前臂侧面是一条斜带，只有靠关节那端够平，要先扫一遍再定位置。
+
+<figure class="wb-figure"><img :src="$withBase('/img/footage/robot_mat.webp')" alt="机械臂材质三版对比" /><figcaption>机械臂材质三版：左为原版（rough 0.24 + 清漆），中为缎面 rough 0.38，右为哑光 rough 0.48。哑光像粘土，缎面去掉了“油感”，但用户比较后仍选原版，再靠贴纸增加真实感。改材质这类主观判断，出对比图让用户选。</figcaption></figure>
+
+<figure class="wb-figure"><img :src="$withBase('/img/footage/label_textures.webp')" alt="贴纸贴图" /><figcaption>贴纸贴图：注意标签、夹手危险三角、铭牌、资产条码，带透明通道的无损 WebP。</figcaption></figure>
 
 <figure class="wb-figure"><img :src="$withBase('/img/footage/robot_labels.webp')" alt="机械臂贴纸" /><figcaption>机械臂贴纸：底座两侧的注意标签、肩部和前臂的夹手危险三角、资产条码。贴纸用 PIL 生成（中文用 Noto Sans SC），品牌沿用虚构的 LUMEN TECH。</figcaption></figure>
 
