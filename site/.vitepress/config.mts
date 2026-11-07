@@ -65,6 +65,7 @@ export default defineConfig({
           { text: '05 建模', link: '/stages/modelling' },
           { text: '06 仿真', link: '/stages/simulation' },
           { text: '07 位姿绑定与渲染', link: '/stages/render' },
+          { text: '07 续：录制与剪辑', link: '/stages/footage' },
           { text: '分期的大项目与收尾', link: '/stages/phased' },
         ],
       },

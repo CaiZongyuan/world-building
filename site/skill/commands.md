@@ -40,8 +40,12 @@ uv run --extra sim pytest          # 每道门都有正例和负例夹具（test
 # 四期接力连跑（每期接上一期的完整状态），可从第 k 期续跑
 python 06-simulation/run_full.py [k]
 
-# 渲染：装配、按期设机位、draft 渲全片、收尾（可分步，已存在的帧会跳过）
-bash 07-render/render_full.sh [build|camera|render|finish]
+# 渲染：装配、按期设机位、look-dev、规划机位与录制倍速、渲素材、拼剪辑版并跑门（可分步，已存在的帧会跳过）
+bash 07-render/render_full.sh [build|camera|lookdev|plan|render|finish]
+# 只渲一轮素材任务（pass1 = 剪辑要用的帧，pass2 = 全部素材）
+bash 07-render/footage/render_pass.sh jobs_pass1.json draft
+# 按剪辑表拼片 → 07-render/videos/<name>_draft.mp4
+python 07-render/edits/make_edit.py 07-render/edits/main_v1.json draft
 
 # 进展截图：在已装配的场景上换机位渲关键帧，再拼成带说明的 WebP
 python 07-render/render_shots.py ...

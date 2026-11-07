@@ -26,4 +26,32 @@ def test_render_collision_proxy_fails(tmp_path):
 
 def test_render_speedup_fails(tmp_path):
     r = run_gate(make(tmp_path, frames=16), "render")   # 半数帧 = 加速
-    assert "V2 帧数 = 仿真时长 × 30（不加速、不跳帧）" in {c.name for c in r.checks if c.status == "FAIL"}
+    assert "V2 绑定帧数 = 仿真时长 × 30（绑定不加速、不跳帧）" in {c.name for c in r.checks if c.status == "FAIL"}
+
+
+def make_footage(tmp_path, have_all=True):
+    """多机位素材流程：footage_plan.json 两个机位，按录制倍速应录 6 帧。"""
+    p = make(tmp_path)
+    f = p / "07-render" / "footage"
+    plan = {"cameras": {"wide": {"windows": [[0, 30]], "strides": [[0, 15, 8], [16, 30, 4]]},
+                        "ws": {"windows": [[10, 13]], "strides": [[10, 13, 2]]}}}
+    f.mkdir(parents=True)
+    (f / "footage_plan.json").write_text(json.dumps(plan))
+    want = {"wide": [0, 8, 16, 20, 24, 28], "ws": [10, 12]}
+    for cam, frames in want.items():
+        (f / "draft" / cam).mkdir(parents=True)
+        for fr in frames[: None if have_all else -1]:
+            (f / "draft" / cam / f"f_{fr:05d}.webp").write_bytes(b"x")
+    return p
+
+
+def test_render_footage_complete_passes_v4a(tmp_path):
+    r = run_gate(make_footage(tmp_path), "render")
+    st = {c.name: c.status for c in r.checks}
+    assert st["V4a 素材库完整（按录制倍速，帧号在仿真范围内）"] == "PASS"
+    assert st["V4b 剪辑版可解码且帧数与剪辑表一致"] == "NOT_RUN"   # 还没剪辑版
+
+
+def test_render_footage_missing_frame_fails(tmp_path):
+    r = run_gate(make_footage(tmp_path, have_all=False), "render")
+    assert "V4a 素材库完整（按录制倍速，帧号在仿真范围内）" in {c.name for c in r.checks if c.status == "FAIL"}

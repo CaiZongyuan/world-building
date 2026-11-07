@@ -333,12 +333,68 @@ def check_simulation(stage_dir: Path) -> list[Check]:
     return checks
 
 
+def _probe(mp4: Path) -> tuple[int, float, bool]:
+    """ffprobe 数帧：返回（帧数，时长 s，是否成功）。"""
+    import json
+    import subprocess
+
+    out = subprocess.run(["ffprobe", "-v", "error", "-count_frames", "-select_streams", "v:0", "-show_entries",
+                          "stream=nb_read_frames,r_frame_rate", "-of", "json", str(mp4)], capture_output=True, text=True)
+    s = json.loads(out.stdout or "{}").get("streams", [{}])[0]
+    n = int(s.get("nb_read_frames", 0))
+    num, den = map(int, s.get("r_frame_rate", "0/1").split("/"))
+    return n, (n / (num / den) if num else 0.0), out.returncode == 0
+
+
+def _check_footage(stage_dir: Path, plan_f: Path, rep: dict) -> list[Check]:
+    """多机位素材流程（footage/ + edits/ + videos/）：
+    V4a 素材库完整：footage_plan.json 里每个机位按录制倍速要录的帧都已渲出，帧号都在仿真范围内；
+    V4b 剪辑版可解码，帧数与它的剪辑表记录（videos/*.edl.json）一致。"""
+    import json
+    import shutil
+
+    plan = json.loads(plan_f.read_text(encoding="utf-8"))
+    prof = "draft"
+    miss, total, out_of_range = 0, 0, 0
+    for cam, c in plan["cameras"].items():
+        d = stage_dir / "footage" / prof / cam
+        have = {p.name for p in d.glob("f_*.webp")} if d.is_dir() else set()
+        for f0, f1, k in c.get("strides", [[a, b, 1] for a, b in c["windows"]]):
+            for f in range(f0, f1 + 1):
+                if f % k:
+                    continue
+                total += 1
+                out_of_range += f >= rep["frames"]
+                miss += f"f_{f:05d}.webp" not in have
+    ev = ["07-render/footage/footage_plan.json"]
+    ok = miss == 0 and out_of_range == 0 and total > 0
+    st = PASS if ok else (NOT_RUN if miss == total else FAIL)
+    checks = [Check("V4a 素材库完整（按录制倍速，帧号在仿真范围内）", st,
+                    f"{len(plan['cameras'])} 个机位，应录 {total} 帧，缺 {miss} 帧，越界 {out_of_range} 帧", ev)]
+    edls = sorted((stage_dir / "videos").glob("*.edl.json"))
+    if not edls:
+        checks.append(Check("V4b 剪辑版可解码且帧数与剪辑表一致", NOT_RUN, "videos/ 下没有剪辑版"))
+    elif not shutil.which("ffprobe"):
+        checks.append(Check("V4b 剪辑版可解码且帧数与剪辑表一致", BLOCKED, "ffprobe 不可用"))
+    else:
+        bad, msg = [], []
+        for e in edls:
+            mp4 = e.with_name(e.name.replace(".edl.json", ".mp4"))
+            want = json.loads(e.read_text(encoding="utf-8"))["frames"]
+            n, dur, ok_rc = _probe(mp4) if mp4.is_file() else (0, 0.0, False)
+            msg.append(f"{mp4.name} {n}/{want} 帧 {dur:.1f} s")
+            if not ok_rc or n != want:
+                bad.append(mp4.name)
+        checks.append(Check("V4b 剪辑版可解码且帧数与剪辑表一致", FAIL if bad else PASS, "；".join(msg),
+                            [f"07-render/videos/{e.name}" for e in edls]))
+    return checks
+
+
 # ---------------------------------------------------------------- 渲染
 @stage_check("render")
 def check_render(stage_dir: Path) -> list[Check]:
     import json
     import shutil
-    import subprocess
 
     th = _thresholds(stage_dir).get("render", {"V2_fps": 30, "V3_pose_tol": 1e-5})
     rep_f = stage_dir / "binding_report.json"
@@ -349,26 +405,24 @@ def check_render(stage_dir: Path) -> list[Check]:
     checks = [Check("V1 场景无碰撞代理", FAIL if rep["v1_collision_objects_in_scene"] else PASS,
                     ", ".join(rep["v1_collision_objects_in_scene"][:5]), ev)]
     expect = round(rep["sim_duration_s"] * th["V2_fps"]) + 1
-    frames = sorted((stage_dir / "frames").glob("frame_*.png")) + sorted((stage_dir / "frames").glob("frame_*.webp"))
     ok = rep["frames"] == expect and rep["fps"] == th["V2_fps"]
-    checks.append(Check("V2 帧数 = 仿真时长 × 30（不加速、不跳帧）", PASS if ok else FAIL,
-                        f"绑定 {rep['frames']} 帧，期望 {expect}；已渲染 {len(frames)} 帧", ev))
+    checks.append(Check("V2 绑定帧数 = 仿真时长 × 30（绑定不加速、不跳帧）", PASS if ok else FAIL,
+                        f"绑定 {rep['frames']} 帧，期望 {expect}", ev))
     ok = rep["v3_max_pos_err_m"] <= th["V3_pose_tol"] and rep["v3_max_rot_err_rad"] <= 1e-4
     checks.append(Check("V3 抽检位姿与仿真一致", PASS if ok else FAIL,
                         f"位置 {rep['v3_max_pos_err_m']:.2e} m，姿态 {rep['v3_max_rot_err_rad']:.2e} rad", ev))
+    plan_f = stage_dir / "footage" / "footage_plan.json"
+    if plan_f.is_file():
+        checks += _check_footage(stage_dir, plan_f, rep)
+        return checks
     mp4 = stage_dir / "film.mp4"
     if not mp4.is_file():
         checks.append(Check("V4 成片可解码且时长一致", NOT_RUN, "缺少 film.mp4"))
     elif not shutil.which("ffprobe"):
         checks.append(Check("V4 成片可解码且时长一致", BLOCKED, "ffprobe 不可用"))
     else:
-        out = subprocess.run(["ffprobe", "-v", "error", "-count_frames", "-select_streams", "v:0", "-show_entries",
-                              "stream=nb_read_frames,r_frame_rate", "-of", "json", str(mp4)], capture_output=True, text=True)
-        s = json.loads(out.stdout or "{}").get("streams", [{}])[0]
-        n = int(s.get("nb_read_frames", 0))
-        num, den = map(int, s.get("r_frame_rate", "0/1").split("/"))
-        dur = n / (num / den) if num else 0
-        ok = out.returncode == 0 and n == expect and abs(dur - expect / th["V2_fps"]) <= 1 / th["V2_fps"]
+        n, dur, ok_rc = _probe(mp4)
+        ok = ok_rc and n == expect and abs(dur - expect / th["V2_fps"]) <= 1 / th["V2_fps"]
         checks.append(Check("V4 成片可解码且时长一致", PASS if ok else FAIL, f"{n} 帧，{dur:.3f} s",
                             ["07-render/film.mp4"]))
     return checks
