@@ -93,7 +93,21 @@
 10. **AgX + Medium High Contrast**：5.4 的 look 名带前缀 `"AgX - Medium High Contrast"`。
 11. **静帧连渲不要让镜头之间串状态**：某个镜头要用另一个机位段的墙组可见性时（`shots.json` 的 `vis_frame`），会清掉墙组动作、写死 visible_camera。同一进程里的下一个镜头会继承这个状态：06 因此少了南墙，左侧成了黑洞。每个镜头开始前先还原墙组原始动作。贴花也要逐个镜头检查：工作站下柜的条码一开始盖住了门上的 LUMEN TECH 丝印。
 
-实测（RTX 3070 Ti Laptop）：预览 836×470 / 64 spp 每张 3–5 s（首张含内核编译和 BVH 约 100 s）；终版 1672×941 / 512 spp 每张 53–86 s。
+12. **成片低采样下透明耗材会出"碎冰"闪点**：静帧 512 spp 很干净，成片 draft（720p / 16 spp）里孔板、储液槽、吸头却满是闪点，加到 128 spp 仍在。有两个原因：
+    - 这些耗材还是 Principled 折射透射，look-dev 第一轮只改了门窗玻璃；
+    - OptiX 降噪器压不住多层透明件的噪声：每一层都在透明和反射之间随机选分支，各像素选中的组合不同。
+
+    处理分两步：
+    - 把薄壁塑料和薄液层（`clear_pp`、`PP_natural`、`plate_clear`、四种液体等 8 种）也改成零折射薄层：Transparent 与按原透射比例混入的 Diffuse 组成本体，再按正面 Fresnel 混 Glossy。清澈塑料单层的透射色只保留 30% 色偏，否则孔板多层叠起来发蓝。
+    - 成片降噪器改为 OIDN（GPU，精确预滤波）。16 spp 下闪点消失，耗时和 OptiX 一样。
+13. **换外观重渲前先清空 `frames/`**：`render_frames.py` 会跳过已存在的帧（为了能中断续跑），旧画面的帧留在目录里就不会被重渲。`render_full.sh` 加了 `lookdev` 步（camera 之后、render 之前），render 步改读 `render_scene_lookdev.blend`。
+
+实测（RTX 3070 Ti Laptop）：
+- 预览 836×470 / 64 spp：每张 3–5 s（首张含内核编译和 BVH 约 100 s）。
+- 终版 1672×941 / 512 spp：每张 53–86 s。
+- 成片 draft（720p / 16 spp / OIDN）：每帧 1.5–2.1 s，首帧约 4 s。旧画面是 1.1 s/帧。
+- draft 改采样数，OptiX 降噪：32 spp 3.6–3.9 s/帧，64 spp 6.4–6.9 s/帧，128 spp 12–13 s/帧，基本按采样数线性增长，自适应采样省不下多少。
+- 工作站近景 150 帧连续片段：静止区域相邻帧平均差约 0.1/255（种子固定为 0、不随帧变化），没有降噪闪烁。
 
 **校验**：对比 `render_scene.blend` 和 `render_scene_lookdev.blend`，6 帧 × 48 个刚体根的世界矩阵最大差 0；V1 无碰撞对象。look-dev 只改视觉，不需要重跑仿真。
 

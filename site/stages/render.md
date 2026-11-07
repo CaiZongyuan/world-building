@@ -205,6 +205,16 @@ bm.free()
 - **墙用 `hide_render` 隐藏会漏光**：墙一隐藏就既不挡光也不反射。改为把墙组的 hide_render 关键帧转成 `visible_camera` 关键帧；新加的墙面管线共用墙的 action，机位切换时一起对相机隐藏。
 :::
 
+::: warning 成片（16 spp）和静帧（512 spp）不一样：透明耗材的"碎冰"闪点
+静帧没问题，换到成片 draft 档位，孔板、储液槽、吸头满是闪点，加到 128 spp 仍在。有两个原因：耗材还是折射透射；OptiX 降噪器压不住多层透明件的噪声。
+
+处理分两步：
+- 把薄壁塑料和薄液层也改成零折射薄层：Transparent 加按透射比例混入的 Diffuse，再按正面 Fresnel 混 Glossy。
+- 成片降噪器改为 **OIDN**（GPU、精确预滤波）。16 spp 下闪点消失，每帧仍是约 2 s。
+
+换外观重渲之前先清空 `frames/`：渲染脚本会跳过已存在的帧，旧帧不会被覆盖。
+:::
+
 ::: tip Blender 5.4 合成器 API
 没有 `scene.node_tree`，也没有 Composite 节点：新建 `CompositorNodeTree` 节点组，`interface.new_socket` 加一个 Image 输出，用 Group Output 收尾，再赋给 `scene.compositing_node_group`。合成树里混合用 `ShaderNodeMix`（RGBA），数学用 `ShaderNodeMath`；Glare、Lens Distortion 等节点的参数都变成了输入插座。颗粒用的是固定噪声图，逐帧不变，只用于静帧；放进成片会像镜头脏了。
 :::
@@ -217,7 +227,7 @@ bm.free()
 
 | 档位 | 设置 | 实测吞吐 | 什么时候用 |
 |---|---|---|---|
-| `draft`（默认） | Cycles OptiX 720p、16 spp、自适应采样 + OptiX 降噪 | 约 0.55–1.0 s / 帧 | 工程审阅与全片连跑 |
+| `draft`（默认） | Cycles OptiX 720p、16 spp、自适应采样 + OIDN 降噪 | 白盒场景约 0.55–1.0 s / 帧；look-dev 场景 1.5–2.1 s / 帧 | 工程审阅与全片连跑 |
 | `final` | 1080p、128 spp | 约 13.5 s / 帧 | 明确需要展示级单帧或宣传片段时 |
 | `eevee` | 最快 | — | 透明门与箱内多层折射/透射表现差，本场景不用 |
 
